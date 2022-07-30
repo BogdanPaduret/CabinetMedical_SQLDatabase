@@ -1,9 +1,6 @@
 package repositories;
 
-import models.users.Doctor;
-import models.users.Patient;
-import models.users.Secretary;
-import models.users.User;
+import models.users.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static helpers.Constants.*;
-import static helpers.Utils.getNewUser;
+import static helpers.Utils.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class UserRepositoryTest {
@@ -89,8 +86,8 @@ class UserRepositoryTest {
             repository.insert(user);
         }
     }
-    private int getRandomNumber(int max) {
-        return (int) Math.floor(Math.random() * max);
+    private int getRandomNumber(int min, int max) {
+        return (int) Math.floor(Math.random() * (max + 1 - min)) + min;
     }
 
 
@@ -153,22 +150,38 @@ class UserRepositoryTest {
 
     @Test
     void getAllTest() {
-        int n = getRandomNumber(10);
+        int n = getRandomNumber(3,6);
         List<User> users = generateRandomUsers(n, false);
         fillRepository(users);
         List<User> loadedUsers = repository.getAll();
         assertEquals(users.size(), loadedUsers.size());
 
-        List<Doctor> doctors = repository.getAll(new Doctor(-1, "John", "Doe"));
+        List<Doctor> doctors = repository.getAll(USER_DOCTOR);
+        List<Patient> patients = repository.getAll(USER_PATIENT);
+        List<Secretary> secretaries = repository.getAll(USER_SECRETARY);
+        List<User> errorList = repository.getAll("user");
 
         for (User user : loadedUsers) {
             System.out.println(user);
         }
-        System.out.println("=======================");
-        for (Doctor doctor : doctors) {
-            System.out.println(doctor);
+        System.out.println("===========DOCTORS============");
+        if (doctors != null) {
+            for (Doctor doctor : doctors) {
+                System.out.println(doctor);
+            }
         }
-
+        System.out.println("===========PATIENTS===========");
+        if (patients != null) {
+            for (Patient patient : patients) {
+                System.out.println(patient);
+            }
+        }
+        System.out.println("============SECRETARIES==========");
+        if (secretaries != null) {
+            for (Secretary secretary : secretaries) {
+                System.out.println(secretary);
+            }
+        }
     }
 
     @Test

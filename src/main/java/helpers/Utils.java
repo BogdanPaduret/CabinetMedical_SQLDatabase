@@ -1,5 +1,7 @@
 package helpers;
 
+import exceptions.NoUserTypeException;
+import exceptions.UserDoesNotExistException;
 import models.appointments.Appointment;
 import models.users.Doctor;
 import models.users.Patient;
@@ -32,6 +34,28 @@ public class Utils {
     }
     public static User getNewUser(String type, String firstName, String lastName) {
         return getNewUser(type, -1, firstName, lastName);
+    }
+    private static User getNewUser(String type) {
+        return getNewUser(type, "NONAME", "NONAME");
+    }
+    public static <T extends User> T getCastingUser(String type)
+            /*
+            method for creating an empty user of desired type
+            useful for using generics in
+            */
+    {
+        boolean exists = false;
+        for (String string : USERS_ARRAY) {
+            if (string.equals(type)) {
+                exists = true;
+                break;
+            }
+        }
+        if (exists) {
+            return (T) getNewUser(type);
+        } else {
+            throw new NoUserTypeException();
+        }
     }
 
     //appointments

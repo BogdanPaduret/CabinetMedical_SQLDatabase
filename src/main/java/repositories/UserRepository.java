@@ -1,5 +1,6 @@
 package repositories;
 
+import exceptions.NoUserTypeException;
 import exceptions.UserDoesNotExistException;
 import helpers.Utils;
 import models.users.Doctor;
@@ -89,26 +90,40 @@ public class UserRepository extends Repository<User> {
 
         return users;
     }
-    public <T extends User> List<T> getAll(T objType) {
+    public <T extends User> List<T> getAll(String type) {
+        T objType = null;
+
+        try {
+            objType = getCastingUser(type);
+        } catch (NoUserTypeException e) {
+            e.printStackTrace();
+        }
+
         String string = querySelect(USERS_TABLE_NAME);
 
         executeStatement(string);
 
         List<T> users = new ArrayList<>();
 
-        try {
-            ResultSet set = getStatement().getResultSet();
-            while (set.next()) {
-                //todo nu pot scapa de eroarea unchecked cast
-                // nu merge nici cu try{}catch{CastClassException}
-                T user = (T) getFromSet(set);
-                if (user.getClass().equals(objType.getClass())) {
-                    users.add(user);
-                }
+        if (objType != null) {
+            try {
+                ResultSet set = getStatement().getResultSet();
+                while (set.next()) {
+                    //todo nu pot scapa de eroarea unchecked cast
+                    // nu merge nici cu try{}catch{CastClassException}
+                    User user = getFromSet(set);
+                    if (user.getClass().equals(objType.getClass())) {
+                        try {
+                            users.add((T) user);
+                        } catch (ClassCastException e) {
+                            //do nothing
+                        }
+                    }
 
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
 
         if (users.size() == 0) {
