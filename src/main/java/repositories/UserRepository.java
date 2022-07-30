@@ -99,34 +99,29 @@ public class UserRepository extends Repository<User> {
             e.printStackTrace();
         }
 
-        String string = querySelect(USERS_TABLE_NAME);
-
-        executeStatement(string);
-
         List<T> users = new ArrayList<>();
 
         if (objType != null) {
+            String string = querySelect(USERS_TABLE_NAME);
+            string += String.format("\nWHERE type = '%s'", objType.getClass().getSimpleName());
+
+            executeStatement(string);
+
             try {
                 ResultSet set = getStatement().getResultSet();
                 while (set.next()) {
-                    //todo nu pot scapa de eroarea unchecked cast
-                    // nu merge nici cu try{}catch{CastClassException}
-                    User user = getFromSet(set);
-                    if (user.getClass().equals(objType.getClass())) {
-                        try {
-                            users.add((T) user);
-                        } catch (ClassCastException e) {
-                            //do nothing
-                        }
+                    try {
+                        users.add((T) getFromSet(set));
+                    } catch (ClassCastException e) {
+                        //do nothing
                     }
-
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
-        }
 
-        if (users.size() == 0) {
+        }
+        if (objType == null || users.size() == 0) {
             users = null;
         }
 
