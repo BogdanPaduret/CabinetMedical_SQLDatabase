@@ -1,12 +1,12 @@
 package exceptions;
 
-public class DoctorDoesNotExistException extends AppointmentFailedException {
+public class DoctorDoesNotExistException extends UserDoesNotExistException {
 
     public DoctorDoesNotExistException(String message) {
         super(message);
     }
     public DoctorDoesNotExistException() {
-        super("Doctor ID not found");
+        super("Doctor not found");
     }
 
 }

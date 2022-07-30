@@ -12,4 +12,8 @@ public class Constants {
     public static final String USER_SECRETARY = "secretary";
     public static final String[] USERS_ARRAY = {USER_DOCTOR, USER_PATIENT, USER_SECRETARY};
 
+    //tables
+    public static final String USERS_TABLE_NAME = "users";
+    public static final String APPOINTMENTS_TABLE_NAME = "appointments";
+
 }

@@ -14,7 +14,7 @@ public class Secretary extends User {
     public String toString() {
         String string = "";
 
-        string += "Secretary ID: " + getUserId();
+        string += "Secretary ID: " + getId();
         string += "\nSecretary name: " + getFirstName() + " " + getLastName();
 
         return string;

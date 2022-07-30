@@ -4,14 +4,14 @@ public abstract class User implements Comparable<User> {
 
     //instance variables
     private String type;
-    private int userId;
+    private int id;
     private String firstName;
     private String lastName;
 
     //constructor
-    public User(String type, int userId, String firstName, String lastName) {
+    public User(String type, int id, String firstName, String lastName) {
         this.type = type;
-        this.userId = userId;
+        this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
     }
@@ -20,8 +20,8 @@ public abstract class User implements Comparable<User> {
     public String getType() {
         return type;
     }
-    public int getUserId() {
-        return userId;
+    public int getId() {
+        return id;
     }
     public String getFirstName() {
         return firstName;
@@ -34,8 +34,8 @@ public abstract class User implements Comparable<User> {
     public void setType(String type) {
         this.type = type;
     }
-    public void setUserId(int userId) {
-        this.userId = userId;
+    public void setId(int id) {
+        this.id = id;
     }
     public void setFirstName(String firstName) {
         this.firstName = firstName;
@@ -49,7 +49,7 @@ public abstract class User implements Comparable<User> {
     public boolean equals(Object o) {
         return (o instanceof User user) &&
                 this.getType().equals(user.getType()) &&
-                this.getUserId() == user.getUserId() &&
+                this.getId() == user.getId() &&
                 this.getFirstName().equals(user.getFirstName()) &&
                 this.getLastName().equals(user.getLastName());
     }
@@ -57,8 +57,8 @@ public abstract class User implements Comparable<User> {
     public int compareTo(User o) {
         User user = (User) o;
 
-        Integer thisId = this.getUserId();
-        Integer userId = user.getUserId();
+        Integer thisId = this.getId();
+        Integer userId = user.getId();
 
         return thisId.compareTo(userId);
     }
@@ -67,7 +67,7 @@ public abstract class User implements Comparable<User> {
         String string = "";
 
         string += "User type: " + getType();
-        string += "\nUser ID: " + getUserId();
+        string += "\nUser ID: " + getId();
         string += "\nUser Name: " + getFirstName() + " " + getLastName();
 
         return string;

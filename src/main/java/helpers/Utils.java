@@ -1,11 +1,38 @@
 package helpers;
 
 import models.appointments.Appointment;
+import models.users.Doctor;
+import models.users.Patient;
+import models.users.Secretary;
+import models.users.User;
 
 import java.time.Duration;
 import java.time.format.DateTimeFormatter;
 
+import static helpers.Constants.*;
+
 public class Utils {
+
+    //users
+    public static User getNewUser(String type, int id, String firstName, String lastName) {
+        switch (type) {
+            default -> {
+                return null;
+            }
+            case USER_DOCTOR -> {
+                return new Doctor(id, firstName, lastName);
+            }
+            case USER_PATIENT -> {
+                return new Patient(id, firstName, lastName);
+            }
+            case USER_SECRETARY -> {
+                return new Secretary(id, firstName, lastName);
+            }
+        }
+    }
+    public static User getNewUser(String type, String firstName, String lastName) {
+        return getNewUser(type, -1, firstName, lastName);
+    }
 
     //appointments
     public static String toStringAppointmentDates(Appointment appointment) {
@@ -44,6 +71,16 @@ public class Utils {
                 }
             }
         }
+
+        return string;
+    }
+
+    //query helpers
+    public static String querySelect(String tableName) {
+        String string = "";
+
+        string += "SELECT *";
+        string += "\nFROM " + tableName;
 
         return string;
     }
