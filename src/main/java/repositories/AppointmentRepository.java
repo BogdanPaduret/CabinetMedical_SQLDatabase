@@ -51,6 +51,12 @@ public class AppointmentRepository extends Repository<Appointment> {
     public Appointment get(int id) {
         return null;
     }
+
+    @Override
+    public int get(Appointment obj) {
+        return -1;
+    }
+
     @Override
     public List<Appointment> getAll() {
         return null;

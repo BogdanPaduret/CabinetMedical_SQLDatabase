@@ -9,11 +9,22 @@ import models.users.Secretary;
 import models.users.User;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Scanner;
 
 import static helpers.Constants.*;
 
 public class Utils {
+
+    //misc
+    public static int parseInteger(String string, int valueOnException) {
+        try {
+            return Integer.parseInt(string);
+        } catch (NumberFormatException e) {
+            return valueOnException;
+        }
+    }
 
     //users
     public static User getNewUser(String type, int id, String firstName, String lastName) {
@@ -38,12 +49,7 @@ public class Utils {
     private static User getNewUser(String type) {
         return getNewUser(type, "NONAME", "NONAME");
     }
-    public static <T extends User> T getCastingUser(String type)
-            /*
-            method for creating an empty user of desired type
-            useful for using generics in
-            */
-    {
+    public static <T extends User> T getCastingUser(String type) {
         boolean exists = false;
         for (String string : USERS_ARRAY) {
             if (string.equals(type)) {
@@ -59,6 +65,9 @@ public class Utils {
     }
 
     //appointments
+    public static Appointment getNewAppointment(int doctorId, int patientId, LocalDateTime startDate, LocalDateTime endDate) {
+        return null;
+    }
     public static String toStringAppointmentDates(Appointment appointment) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEEE, MMM dd, yyyy HH:mm a");
 
@@ -107,6 +116,35 @@ public class Utils {
         string += "\nFROM " + tableName;
 
         return string;
+    }
+
+    //view helpers
+    public static Scanner getScanner(String input) {
+        if (input.equals("")) {
+            return new Scanner(System.in);
+        } else {
+            return new Scanner(input);
+        }
+    }
+
+    public static boolean exitAskSave(Scanner scanner) {
+        return exit(scanner);
+    }
+    public static boolean exit(Scanner scanner) {
+        System.out.println("""
+                Sigur iesiti din aplicatie?
+                 - Y / Yes  / y / yes   : pentru a iesi din modul curent.
+                 - Q / Quit / q / quit  : pentru a inchide complet programul. Nu se salveaza.
+                 - N / No   / n / no    : pentru a ramane in modul curent.
+                """);
+        char ans = scanner.nextLine().toLowerCase().charAt(0);
+        if (ans == 'y') {
+            return true;
+        }
+        if (ans == 'q') {
+            System.exit(0);
+        }
+        return false;
     }
 
 }

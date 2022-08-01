@@ -1,6 +1,7 @@
 package repositories;
 
 import exceptions.NoUserTypeException;
+import exceptions.TooManyResultsException;
 import exceptions.UserDoesNotExistException;
 import helpers.Utils;
 import models.users.Doctor;
@@ -69,6 +70,42 @@ public class UserRepository extends Repository<User> {
 //        } else {
 //            throw new UserDoesNotExistException("User ID not found");
 //        }
+    }
+
+    @Override
+    public int get(User user) throws UserDoesNotExistException {
+        String string = Utils.querySelect(USERS_TABLE_NAME);
+
+        String firstName = user.getFirstName();
+        String lastName = user.getLastName();
+
+        string += String.format("\nWHERE firstName = '%s', lastName= '%s'", firstName, lastName);
+
+        executeStatement(string);
+
+        List<Integer> ids = new ArrayList<>();
+
+        try {
+            ResultSet set = getStatement().getResultSet();
+            while (set.next()) {
+                User buffer = getFromSet(set);
+                if (buffer.getFirstName().equals(firstName) &&
+                        buffer.getLastName().equals(lastName)) {
+                    ids.add(buffer.getId());
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        if (ids.size() > 1) {
+            throw new TooManyResultsException();
+        } else if (ids.size() == 0) {
+            throw new UserDoesNotExistException();
+        } else {
+            return ids.get(0);
+        }
+
     }
     @Override
     public List<User> getAll() {

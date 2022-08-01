@@ -76,6 +76,7 @@ public abstract class Repository<T> {
     public abstract void insert(T obj);
     //read
     public abstract T get(int id);
+    public abstract int get(T obj);
     public abstract List<T> getAll();
     //update
     public abstract void update(T obj);
