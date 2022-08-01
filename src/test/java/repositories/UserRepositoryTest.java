@@ -1,5 +1,6 @@
 package repositories;
 
+import exceptions.NoUserTypeException;
 import models.users.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -90,13 +91,11 @@ class UserRepositoryTest {
         return (int) Math.floor(Math.random() * (max + 1 - min)) + min;
     }
 
-
     //instance variables
     UserRepository repository;
     String databaseName = "testCabinetMedical";
 
-
-    //tests
+    //per test actions
     @BeforeEach
     void setUp() {
         repository = new UserRepository(
@@ -111,6 +110,7 @@ class UserRepositoryTest {
 //        clearRepository();
     }
 
+    //tests
     @Test
     void insertTest() {
         String[] types = USERS_ARRAY;
@@ -147,10 +147,9 @@ class UserRepositoryTest {
             assertEquals(user, buffer);
         }
     }
-
     @Test
     void getAllTest() {
-        int n = getRandomNumber(3,6);
+        int n = getRandomNumber(50,100);
         List<User> users = generateRandomUsers(n, false);
         fillRepository(users);
         List<User> loadedUsers = repository.getAll();
@@ -160,40 +159,95 @@ class UserRepositoryTest {
         List<Patient> patients = repository.getAll(USER_PATIENT);
         List<Secretary> secretaries = repository.getAll(USER_SECRETARY);
         List<User> errorList = repository.getAll("user");
+        /*
+        -- Codul nu returneaza nici o exceptie. Doar imi imprima eroarea.
+        assertThrows(NoUserTypeException.class, () -> {
+            List<User> errorList = repository.getAll("user");
+        });
+         */
 
         for (User user : loadedUsers) {
             System.out.println(user);
         }
-        System.out.println("===========DOCTORS============");
-        if (doctors != null) {
-            for (Doctor doctor : doctors) {
-                System.out.println(doctor);
-            }
-        }
-        System.out.println("===========PATIENTS===========");
-        if (patients != null) {
-            for (Patient patient : patients) {
-                System.out.println(patient);
-            }
-        }
-        System.out.println("============SECRETARIES==========");
-        if (secretaries != null) {
-            for (Secretary secretary : secretaries) {
-                System.out.println(secretary);
-            }
-        }
-    }
 
-    @Test
-    void testGetAllTest() {
+        String[] types = {
+                "============ DOCTORS ============",
+                "=========== PATIENTS  ===========",
+                "========== SECRETARIES =========="
+        };
+        List<?>[] userTypes = {
+                doctors,
+                patients,
+                secretaries
+        };
+
+        for (int i = 0; i < types.length; i++) {
+            System.out.println("\n\n\n" + types[i].toString() + "\nSize: " + userTypes[i].size() + "\n");
+            if (userTypes[i] != null) {
+                for (Object o : userTypes[i]) {
+                    System.out.println(o.toString());
+                }
+            }
+        }
+
     }
 
     @Test
     void updateTest() {
+        List<User> usersToWrite = new ArrayList<>();
+        usersToWrite.add(getNewUser(USER_DOCTOR, "Mihai", "Petrescu"));
+        usersToWrite.add(getNewUser(USER_PATIENT, "Ana", "Tabara"));
+        usersToWrite.add(getNewUser(USER_SECRETARY, "Vlad", "Turcescu"));
+
+        for (User user : usersToWrite) {
+            repository.insert(user);
+        }
+
+        assertEquals(usersToWrite.size(), repository.getAll().size());
+
+        int id = (int) Math.floor(Math.random() * usersToWrite.size()) + 1;
+        assertTrue(id <= usersToWrite.size() && id > 0);
+
+        User user = repository.get(id);
+        user.setFirstName("JOOOOOOOOHN");
+        user.setLastName("DOOOOOOOOOE");
+
+        repository.update(user);
+
+        assertEquals(user, repository.get(id));
+
     }
 
     @Test
     void deleteTest() {
+        User[] users = {
+                getNewUser(USER_DOCTOR, "Mihai", "Catalin"),
+                getNewUser(USER_PATIENT, "Vlad", "Andrei"),
+                getNewUser(USER_SECRETARY, "Ana", "Gherasim")
+        };
+
+        for (User user : users) {
+            repository.insert(user);
+        }
+
+        assertEquals(users.length, repository.getAll().size());
+
+        int id = 2;
+
+        repository.delete(id);
+        assertEquals(users.length - 1, repository.getAll().size());
+        assertNull(repository.get(id));
+
+        List<User> usersRepository = repository.getAll();
+
+        id = 1;
+        int index = id - 1;
+        users[index].setId(id);
+
+        repository.delete(users[index]);
+        assertEquals(users.length - 2, repository.getAll().size());
+        assertNull(repository.get(id));
+
     }
 
 }

@@ -26,6 +26,8 @@ public class UserRepository extends Repository<User> {
         super(JdbcURL, userName, password);
     }
 
+
+    //create
     @Override
     public void insert(User o) {
         String string = "";
@@ -36,6 +38,8 @@ public class UserRepository extends Repository<User> {
         executeStatement(string);
     }
 
+
+    //read
     @Override
     public User get(int id) {
         String string = Utils.querySelect(USERS_TABLE_NAME);
@@ -66,7 +70,6 @@ public class UserRepository extends Repository<User> {
 //            throw new UserDoesNotExistException("User ID not found");
 //        }
     }
-
     @Override
     public List<User> getAll() {
         String string = querySelect(USERS_TABLE_NAME);
@@ -110,11 +113,7 @@ public class UserRepository extends Repository<User> {
             try {
                 ResultSet set = getStatement().getResultSet();
                 while (set.next()) {
-                    try {
-                        users.add((T) getFromSet(set));
-                    } catch (ClassCastException e) {
-                        //do nothing
-                    }
+                    users.add((T) getFromSet(set));
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -128,26 +127,35 @@ public class UserRepository extends Repository<User> {
         return users;
     }
 
+
+    //update
     @Override
     public void update(User o) {
         String string = "";
 
         string += "UPDATE " + USERS_TABLE_NAME;
-        string += String.format("SET firstName = '%s', lastname = '%s'", o.getFirstName(), o.getLastName());
+        string += String.format("\nSET firstName = '%s', lastname = '%s'", o.getFirstName(), o.getLastName());
         string += String.format("\nWHERE id = '%d'", o.getId());
 
         executeStatement(string);
     }
 
+
+    //delete
     @Override
     public void delete(User o) {
-
+        delete(o.getId());
     }
-
     @Override
     public void delete(int id) {
+        String string = "";
 
+        string += "DELETE FROM " + USERS_TABLE_NAME;
+        string += String.format("\nWHERE id = %d", id);
+
+        executeStatement(string);
     }
+
 
     //helpers
     private User getFromSet(ResultSet set) throws SQLException {
