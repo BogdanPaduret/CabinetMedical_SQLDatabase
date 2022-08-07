@@ -83,4 +83,5 @@ public abstract class Repository<T> {
     //delete
     public abstract void delete(T obj);
     public abstract void delete(int id);
+    public abstract void clear();
 }

@@ -192,6 +192,17 @@ public class UserRepository extends Repository<User> {
 
         executeStatement(string);
     }
+    @Override
+    public void clear() {
+        String[] strings = {
+                "DELETE FROM " + USERS_TABLE_NAME,
+                "ALTER TABLE " + USERS_TABLE_NAME + " AUTO_INCREMENT = 0"
+        };
+
+        for (int i = 0; i < strings.length; i++) {
+            executeStatement(strings[i]);
+        }
+    }
 
 
     //helpers

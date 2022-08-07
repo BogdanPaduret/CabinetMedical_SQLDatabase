@@ -22,6 +22,12 @@ public class Appointment implements Comparable<Appointment> {
         this.doctorId = doctorId;
         this.patientId = patientId;
     }
+
+    public Appointment(int appointmentId, int doctorId, int patientId, LocalDateTime startDate, LocalDateTime endDate) {
+        this(appointmentId, doctorId, patientId);
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
     public Appointment(int appointmentId,
                        int doctorId,
                        int patientId,

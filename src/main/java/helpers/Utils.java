@@ -7,10 +7,13 @@ import models.users.Doctor;
 import models.users.Patient;
 import models.users.Secretary;
 import models.users.User;
+import repositories.UserRepository;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 import static helpers.Constants.*;
@@ -64,10 +67,23 @@ public class Utils {
         }
     }
 
-    //appointments
-    public static Appointment getNewAppointment(int doctorId, int patientId, LocalDateTime startDate, LocalDateTime endDate) {
-        return null;
+    public static boolean typeExists(String type) {
+        for (int i = 0; i < USERS_ARRAY.length; i++) {
+            if (USERS_ARRAY[i].equals(type)) {
+                return true;
+            }
+        }
+        return false;
     }
+
+    //appointments
+    public static Appointment getNewAppointment(int appointmentId, int doctorId, int patientId, LocalDateTime startDate, LocalDateTime endDate) {
+        return new Appointment(appointmentId, doctorId, patientId, startDate, endDate);
+    }
+    public static Appointment getNewAppointment(int doctorId, int patientId, LocalDateTime startDate, LocalDateTime endDate) {
+        return getNewAppointment(-1, doctorId, patientId, startDate, endDate);
+    }
+
     public static String toStringAppointmentDates(Appointment appointment) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEEE, MMM dd, yyyy HH:mm a");
 
@@ -146,5 +162,68 @@ public class Utils {
         }
         return false;
     }
+
+    //test
+    public static List<User> generateRandomUsers(int howMany, boolean withId) {
+        String[] types = USERS_ARRAY;
+        String[] firstNames = {
+                "Andrei",
+                "Bogdan",
+                "Dumitru",
+                "Vlad",
+                "Costel",
+                "Vasile",
+                "Ana",
+                "Dana",
+                "Victor",
+                "Maria",
+                "Bianca",
+                "Georgeta",
+                "Georgiana",
+                "Victoria",
+                "Angela",
+                "Cristian"
+        };
+        String[] lastNames = {
+                "Dumitriu",
+                "Vasilescu",
+                "Neculce",
+                "Aciobanesei",
+                "Pietraru",
+                "Carstescu",
+                "Mircea",
+                "Atudoresei"
+        };
+
+        List<User> users = new ArrayList<>();
+
+        int coefficient = 0;
+
+        int c = 1;
+
+        for (int i = 0; i < howMany; i++) {
+            String type = types[(int) Math.floor(Math.random() * types.length + coefficient)];
+            String firstName = firstNames[(int) Math.floor(Math.random() * firstNames.length + coefficient)];
+            String lastName = lastNames[(int) Math.floor(Math.random() * lastNames.length + coefficient)];
+            User user;
+            if (withId == true) {
+                user = getNewUser(type, c, firstName, lastName);
+            } else {
+                user = getNewUser(type, firstName, lastName);
+            }
+            if (user != null) {
+                users.add(user);
+                c++;
+            }
+        }
+
+        return users;
+    }
+    public static void fillRepository(List<User> list, UserRepository userRepository) {
+        for (User user : list) {
+            userRepository.insert(user);
+        }
+    }
+
 
 }

@@ -1,5 +1,7 @@
 package models.users;
 
+import static helpers.Constants.NAME_SEPARATOR;
+
 public abstract class User implements Comparable<User> {
 
     //instance variables
@@ -28,6 +30,9 @@ public abstract class User implements Comparable<User> {
     }
     public String getLastName() {
         return lastName;
+    }
+    public String getUserName() {
+        return getFirstName() + NAME_SEPARATOR + getLastName();
     }
 
     //updateAdd

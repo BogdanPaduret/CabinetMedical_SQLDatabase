@@ -5,6 +5,8 @@ public class Constants {
     //Strings
     public static final String STRING_SEPARATOR = ",";
     public static final String SAVE_SEPARATOR = "/";
+    public static final String NAME_SEPARATOR = " ";
+    public static final String TIME_SEPARATOR = ":";
 
     //User subclasses
     public static final String USER_DOCTOR = "doctor";

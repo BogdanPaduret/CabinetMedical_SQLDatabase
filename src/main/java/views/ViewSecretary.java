@@ -1,5 +1,6 @@
 package views;
 
+import exceptions.AppointmentFailedException;
 import helpers.Utils;
 import models.appointments.Appointment;
 import models.users.Secretary;
@@ -15,7 +16,7 @@ public class ViewSecretary implements View {
 
 
     //instance variables
-    Secretary secretary;
+    private Secretary secretary;
 
 
     //constructor
@@ -46,12 +47,15 @@ public class ViewSecretary implements View {
                 default -> System.out.println("Optiunea nu exista.\nIncercati din nou.");
                 case 0 -> running = !Utils.exitAskSave(scanner);
                 case 1 -> createAppointment(scanner);
-                case 2 -> {}
-                case 3 -> {}
-                case 6 -> {}
-                case 7 -> {}
-                case 8 -> {}
-                case 9 -> {}
+                /*
+                todo
+                 case 2 -> {}
+                 case 3 -> {}
+                 case 6 -> {}
+                 case 7 -> {}
+                 case 8 -> {}
+                 case 9 -> {}
+                 */
             }
         }
 
@@ -64,7 +68,7 @@ public class ViewSecretary implements View {
         String string = "";
 
         string += "\n=== MOD SECRETAR ===";
-        string += "\nSunteti logat ca " + secretary.getFirstName().toUpperCase() + " " + secretary.getLastName().toUpperCase();
+        string += "\nSunteti logat ca " + secretary.getUserName().toUpperCase();
         string += "\nApasati 1 pentru a crea o programare";
         string += "\nApasati 2 pentru a anula o programare";
         string += "\nApasati 3 pentru a modifica o programare";
@@ -78,21 +82,28 @@ public class ViewSecretary implements View {
     }
 
     private void createAppointment(Scanner scanner) {
+        try {
+            RepositoryLoad.appointmentRepository.insert(enquireAppointmentDetails(scanner));
+        } catch (AppointmentFailedException e) {
+            System.out.println("Programarea nu poate fi facuta cu acest medic in acest interval orar." +
+                    "\nAlegeti un alt doctor sau un alt interval orar."
+            );
+        }
 
     }
 
-    private void enquireAppointmentDetails(Scanner scanner) {
-        System.out.println("Introduceti prenumele si numele PACIENTULUI separate prin spatiu");
-        String[] patientName = scanner.nextLine().split(" ");
-        System.out.println("Introduceti prenumele si numele DOCTORULUI separate prin spatiu");
-        String[] doctorName = scanner.nextLine().split(" ");
+    private Appointment enquireAppointmentDetails(Scanner scanner) {
+        System.out.println("Introduceti prenumele si numele PACIENTULUI separate prin '" + NAME_SEPARATOR + "'");
+        String[] patientName = scanner.nextLine().split(NAME_SEPARATOR);
+        System.out.println("Introduceti prenumele si numele DOCTORULUI separate prin '" + NAME_SEPARATOR + "'");
+        String[] doctorName = scanner.nextLine().split(NAME_SEPARATOR);
 
         int year = 0;
         int month = 0;
         int day = 0;
         String[] input;
         while (year * month * day == 0) {
-            System.out.println("Introduceti anul, luna si ziua programarii, separate prin virgula");
+            System.out.println("Introduceti anul, luna si ziua programarii, separate prin '" + STRING_SEPARATOR + "'");
             input = scanner.nextLine().split(STRING_SEPARATOR);
 
             try {
@@ -108,8 +119,8 @@ public class ViewSecretary implements View {
         int startHour = 0;
         int startMinute=-1;
         while (startHour == 0 || startMinute<0) {
-            System.out.println("Introduceti ora si minutul programarii separate prin ':'");
-            input = scanner.nextLine().split(":");
+            System.out.println("Introduceti ora si minutul programarii separate prin '" + TIME_SEPARATOR + "'");
+            input = scanner.nextLine().split(TIME_SEPARATOR);
             try {
                 startHour = Integer.parseInt(input[0]);
                 startMinute = Integer.parseInt(input[1]);
@@ -135,7 +146,7 @@ public class ViewSecretary implements View {
         LocalDateTime startDate = LocalDateTime.of(year, month, day, startHour, startMinute);
         LocalDateTime endDate = startDate.plusMinutes(duration);
 
-//        return new Appointment(appointmentId, doctorId, patientId, startDate, endDate);
+        return getNewAppointment(doctorId, patientId, startDate, endDate);
     }
 
 }

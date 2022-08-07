@@ -7,6 +7,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static helpers.Constants.APPOINTMENTS_TABLE_NAME;
+import static helpers.Constants.USERS_TABLE_NAME;
 import static helpers.Utils.querySelect;
 
 public class AppointmentRepository extends Repository<Appointment> {
@@ -25,7 +26,6 @@ public class AppointmentRepository extends Repository<Appointment> {
     public void insert(Appointment obj) {
         insert(new Appointment[]{obj});
     }
-
     public void insert(Appointment[] appointments) {
         String string = "";
 
@@ -44,6 +44,14 @@ public class AppointmentRepository extends Repository<Appointment> {
 
         executeStatement(string);
     }
+
+
+
+
+    /*
+    todo
+     restul de implemented methods
+     */
 
 
     //read
@@ -78,6 +86,18 @@ public class AppointmentRepository extends Repository<Appointment> {
     @Override
     public void delete(int id) {
 
+    }
+
+    @Override
+    public void clear() {
+        String[] strings = {
+                "DELETE FROM " + APPOINTMENTS_TABLE_NAME,
+                "ALTER TABLE " + APPOINTMENTS_TABLE_NAME + " AUTO_INCREMENT = 0"
+        };
+
+        for (String string : strings) {
+            executeStatement(string);
+        }
     }
 
 
