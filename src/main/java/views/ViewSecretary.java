@@ -23,6 +23,10 @@ public class ViewSecretary implements View {
     public ViewSecretary(Secretary secretary) {
         this.secretary = secretary;
     }
+    public ViewSecretary(Secretary secretary, String databaseName) {
+        init(databaseName);
+        this.secretary = secretary;
+    }
 
 
     //implement methods
@@ -30,7 +34,6 @@ public class ViewSecretary implements View {
     public void play() {
         this.play("");
     }
-
     public void play(String input) {
         Scanner scanner = getScanner(input);
 
@@ -47,9 +50,9 @@ public class ViewSecretary implements View {
                 default -> System.out.println("Optiunea nu exista.\nIncercati din nou.");
                 case 0 -> running = !Utils.exitAskSave(scanner);
                 case 1 -> createAppointment(scanner);
+                case 2 -> cancelAppointment(scanner);
                 /*
                 todo
-                 case 2 -> {}
                  case 3 -> {}
                  case 6 -> {}
                  case 7 -> {}
@@ -63,7 +66,7 @@ public class ViewSecretary implements View {
     }
 
 
-    //helpers
+    //actions
     private void menu() {
         String string = "";
 
@@ -92,61 +95,68 @@ public class ViewSecretary implements View {
 
     }
 
+    private void cancelAppointment(Scanner scanner) {
+
+    }
+
+
+
+    //helpers
     private Appointment enquireAppointmentDetails(Scanner scanner) {
         System.out.println("Introduceti prenumele si numele PACIENTULUI separate prin '" + NAME_SEPARATOR + "'");
         String[] patientName = scanner.nextLine().split(NAME_SEPARATOR);
         System.out.println("Introduceti prenumele si numele DOCTORULUI separate prin '" + NAME_SEPARATOR + "'");
         String[] doctorName = scanner.nextLine().split(NAME_SEPARATOR);
 
-        int year = 0;
-        int month = 0;
-        int day = 0;
-        String[] input;
-        while (year * month * day == 0) {
-            System.out.println("Introduceti anul, luna si ziua programarii, separate prin '" + STRING_SEPARATOR + "'");
-            input = scanner.nextLine().split(STRING_SEPARATOR);
-
-            try {
-                year = Integer.parseInt(input[0]);
-                month = Integer.parseInt(input[1]);
-                day = Integer.parseInt(input[2]);
-            } catch (NumberFormatException e) {
-                e.printStackTrace();
-                System.out.println("Eroare la introducerea datei. Mai incercati o data");
-            }
+        int[] date = new int[0];
+        while (date.length < 3 && multiplyIntArray(date) == 0) {
+            System.out.println("Introduceti anul, luna si ziua separate prin '" + STRING_SEPARATOR + "'");
+            date = intFromScanner(scanner, STRING_SEPARATOR);
         }
 
-        int startHour = 0;
-        int startMinute=-1;
-        while (startHour == 0 || startMinute<0) {
+        int[] time = new int[0];
+        while (time.length < 2) {
             System.out.println("Introduceti ora si minutul programarii separate prin '" + TIME_SEPARATOR + "'");
-            input = scanner.nextLine().split(TIME_SEPARATOR);
-            try {
-                startHour = Integer.parseInt(input[0]);
-                startMinute = Integer.parseInt(input[1]);
-            } catch (NumberFormatException e) {
-                e.printStackTrace();
-                System.out.println("Eroare la introducerea orei. Mai incercati o data");
-            }
+            time = intFromScanner(scanner, TIME_SEPARATOR);
         }
 
         int duration = 0;
-        while (duration == 0) {
+        while (duration <= 0) {
             System.out.println("Introduceti durata programarii in minute intregi");
-            try {
-                duration = Integer.parseInt(scanner.nextLine());
-            } catch (NumberFormatException e) {
-                e.printStackTrace();
-                System.out.println("Durata introdusa este incorecta. Mai incercati o data");
-            }
+            duration = Utils.parseInteger(scanner.nextLine(), 0);
         }
 
         int doctorId = RepositoryLoad.userRepository.get(getNewUser(USER_DOCTOR, doctorName[0], doctorName[1]));
         int patientId = RepositoryLoad.userRepository.get(getNewUser(USER_PATIENT, patientName[0], patientName[1]));
-        LocalDateTime startDate = LocalDateTime.of(year, month, day, startHour, startMinute);
+        LocalDateTime startDate = LocalDateTime.of(date[0], date[1], date[2], time[0], time[1]);
         LocalDateTime endDate = startDate.plusMinutes(duration);
 
         return getNewAppointment(doctorId, patientId, startDate, endDate);
+    }
+
+    private int[] intFromScanner(Scanner scanner, String separator) {
+        return intFromScanner(scanner, separator, 0);
+    }
+    private int[] intFromScanner(Scanner scanner, String separator, int valOnException) {
+        String[] input = scanner.nextLine().split(separator);
+        int[] inputArray = new int[input.length];
+        for (int i = 0; i < input.length; i++) {
+            inputArray[i] = Utils.parseInteger(input[i], valOnException);
+        }
+        return inputArray;
+    }
+
+    private int multiplyIntArray(int[] array) {
+        int r;
+        if (array.length > 0) {
+            r = 1;
+            for (int i = 0; i < array.length; i++) {
+                r = r * array[i];
+            }
+        } else {
+            r = 0;
+        }
+        return r;
     }
 
 }

@@ -10,6 +10,7 @@ public class Main {
     public static void viewLogInTest() {
         String databaseName = "testCabinetMedical";
         ViewLogIn viewLogIn = new ViewLogIn(databaseName);
+        RepositoryLoad.userRepository.clear();
         Utils.fillRepository(Utils.generateRandomUsers(20, false), RepositoryLoad.userRepository);
         viewLogIn.play();
     }
