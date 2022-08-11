@@ -7,8 +7,12 @@ import models.users.Doctor;
 import models.users.Patient;
 import models.users.Secretary;
 import models.users.User;
+import repositories.Repository;
 import repositories.UserRepository;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -123,6 +127,10 @@ public class Utils {
 
         return string;
     }
+    public static String toSQLDateTimeString(LocalDateTime dateTime) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        return dateTime.format(formatter);
+    }
 
     //query helpers
     public static String querySelect(String tableName) {
@@ -133,6 +141,7 @@ public class Utils {
 
         return string;
     }
+
 
     //view helpers
     public static Scanner getScanner(String input) {

@@ -51,9 +51,9 @@ public class ViewSecretary implements View {
                 case 0 -> running = !Utils.exitAskSave(scanner);
                 case 1 -> createAppointment(scanner);
                 case 2 -> cancelAppointment(scanner);
+                case 3 -> updateAppointment(scanner);
                 /*
                 todo
-                 case 3 -> {}
                  case 6 -> {}
                  case 7 -> {}
                  case 8 -> {}
@@ -96,6 +96,26 @@ public class ViewSecretary implements View {
     }
 
     private void cancelAppointment(Scanner scanner) {
+        System.out.println("Introduceti ID-ul programarii");
+        int id = Utils.parseInteger(scanner.nextLine(), -1);
+        if (id != -1) {
+            try {
+                RepositoryLoad.appointmentRepository.delete(enquireAppointmentDetails(scanner));
+            } catch (AppointmentFailedException e) {
+                e.printStackTrace();
+                System.out.println("Eroare la introducerea detaliilor");
+            }
+        } else {
+            try {
+                RepositoryLoad.appointmentRepository.delete(id);
+            } catch (AppointmentFailedException e) {
+                e.printStackTrace();
+                System.out.println("Programare cu ID-ul introdus nu exista");
+            }
+        }
+    }
+
+    private void updateAppointment(Scanner scanner) {
 
     }
 

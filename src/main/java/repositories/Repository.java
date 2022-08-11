@@ -1,9 +1,6 @@
 package repositories;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.List;
 
 public abstract class Repository<T> {
@@ -84,4 +81,9 @@ public abstract class Repository<T> {
     public abstract void delete(T obj);
     public abstract void delete(int id);
     public abstract void clear();
+
+    //helpers
+    public static <T> T getFromSet(ResultSet set) throws SQLException {
+        return null;
+    }
 }

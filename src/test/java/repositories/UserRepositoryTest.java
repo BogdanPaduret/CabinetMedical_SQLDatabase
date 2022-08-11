@@ -19,6 +19,8 @@ class UserRepositoryTest {
     //helpers
     private void clearRepository() {
         String[] strings = {
+                "DELETE FROM " + APPOINTMENTS_TABLE_NAME,
+                "ALTER TABLE "+ APPOINTMENTS_TABLE_NAME + " AUTO_INCREMENT =0",
                 "DELETE FROM " + USERS_TABLE_NAME,
                 "ALTER TABLE " + USERS_TABLE_NAME + " AUTO_INCREMENT = 0"
         };

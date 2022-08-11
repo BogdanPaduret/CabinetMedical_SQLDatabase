@@ -64,16 +64,10 @@ public class UserRepository extends Repository<User> {
         }
 
         return user;
-
-//        if (user != null) {
-//            return user;
-//        } else {
-//            throw new UserDoesNotExistException("User ID not found");
-//        }
     }
 
     @Override
-    public int get(User user) throws UserDoesNotExistException {
+    public int get(User user) throws UserDoesNotExistException, TooManyResultsException {
         String string = Utils.querySelect(USERS_TABLE_NAME);
 
         String firstName = user.getFirstName();
@@ -206,7 +200,7 @@ public class UserRepository extends Repository<User> {
 
 
     //helpers
-    private User getFromSet(ResultSet set) throws SQLException {
+    public static User getFromSet(ResultSet set) throws SQLException {
         String type = set.getString(1);
         int id = set.getInt(2);
         String firstName = set.getString(3);
