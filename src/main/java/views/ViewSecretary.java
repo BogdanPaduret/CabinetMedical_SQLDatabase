@@ -60,6 +60,9 @@ public class ViewSecretary implements View {
                 case 7 -> showAllDoctors();
                 case 8 -> showAllPatients();
                 case 9 -> showAllAppointments();
+                case 21 -> soonestAppointment(scanner);
+                case 22 -> longestAppointment(scanner);
+                case 23 -> freeDoctorsOnTimeInterval(scanner);
             }
         }
 
@@ -73,13 +76,20 @@ public class ViewSecretary implements View {
 
         string += "\n=== MOD SECRETAR ===";
         string += "\nSunteti logat ca " + secretary.getUserName().toUpperCase();
+
         string += "\nApasati 1 pentru a crea o programare";
         string += "\nApasati 2 pentru a anula o programare";
         string += "\nApasati 3 pentru a modifica o programare";
+
         string += "\nApasati 6 pentru a vedea toti utilizatorii";
         string += "\nApasati 7 pentru a vedea toti doctorii";
         string += "\nApasati 8 pentru a vedea toti pacientii";
         string += "\nApasati 9 pentru a vedea toate programarile";
+
+        string += "\nApasati 21 pentru a vedea care este cea mai rapida programare intr-o anumita zi";
+        string += "\nApasati 22 pentru a vedea care poate fi programarea cea mai lunga cu un anumit doctor";
+        string += "\nApasati 23 pentru a vedea ce doctori sunt disponibili intr-o anumita perioada";
+
         string += "\nApasati 0 pentru a iesi";
 
         System.out.println(string);
@@ -138,17 +148,6 @@ public class ViewSecretary implements View {
             throw new AppointmentDoesNotExistException();
         }
     }
-    private void updateAppointment(int appointmentId, Scanner scanner) {
-        System.out.println("Introduceti noile valori ale programarii");
-        try {
-            Appointment appointment = enquireAppointmentDetails(scanner, appointmentId);
-            RepositoryLoad.appointmentRepository.update(appointment);
-            System.out.println("Modificare realizata cu succes!");
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("Eroare la modificare.");
-        }
-    }
 
     private void showAllUsers() {
         showAllUsers(USERS_ARRAY);
@@ -158,13 +157,6 @@ public class ViewSecretary implements View {
     }
     private void showAllPatients() {
         showAllUsers(new String[]{USER_PATIENT});
-    }
-
-    private void showAllUsers(String[] types) {
-        for (String string : types) {
-            System.out.println("\nToti utilizatorii de tip " + string.toUpperCase());
-            showAllUserByType(string);
-        }
     }
 
     private void showAllAppointments() {
@@ -179,6 +171,18 @@ public class ViewSecretary implements View {
             string += "\n" + Utils.toStringAppointmentDates(a);
             System.out.println(string);
         }
+    }
+
+    private void soonestAppointment(Scanner scanner) {
+
+    }
+
+    private void longestAppointment(Scanner scanner) {
+
+    }
+
+    private void freeDoctorsOnTimeInterval(Scanner scanner) {
+
     }
 
 
@@ -255,10 +259,28 @@ public class ViewSecretary implements View {
         return r;
     }
 
+    private void updateAppointment(int appointmentId, Scanner scanner) {
+        System.out.println("Introduceti noile valori ale programarii");
+        try {
+            Appointment appointment = enquireAppointmentDetails(scanner, appointmentId);
+            RepositoryLoad.appointmentRepository.update(appointment);
+            System.out.println("Modificare realizata cu succes!");
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Eroare la modificare.");
+        }
+    }
+
     private void showAllUserByType(String type) {
         List<User> users = RepositoryLoad.userRepository.getAll(type);
         for (User user : users) {
             System.out.println(user);
+        }
+    }
+    private void showAllUsers(String[] types) {
+        for (String string : types) {
+            System.out.println("\nToti utilizatorii de tip " + string.toUpperCase());
+            showAllUserByType(string);
         }
     }
 

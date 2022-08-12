@@ -70,6 +70,7 @@ public class Main {
     /*
     todo
         care-i cea mai rapida programare intr-o zi
+            mai intai in java o lista cu locuri libere intr-o zi (se poate prelua din SQL direct o lista sortata cu toate programarile)
         care-i slotul cel mai mare la un anumit doctor
         ce doctori sunt disponibili intr-o anumita perioada
      */

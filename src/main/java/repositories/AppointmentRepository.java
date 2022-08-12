@@ -227,6 +227,42 @@ public class AppointmentRepository extends Repository<Appointment> {
         return getAllHelper(variableNames, stringValues);
     }
 
+    public List<Appointment> getAll(int doctorId, LocalDate day) {
+        String string = Utils.querySelect(APPOINTMENTS_TABLE_NAME);
+        string += String.format("\nWHERE doctorId = %d AND startDateTime BETWEEN '%s' AND '%s'",
+                doctorId, Utils.toSQLDateTimeString(day.atTime(9, 0)), Utils.toSQLDateTimeString(day.atTime(17, 0)));
+        string += "\nORDER BY startDateTime";
+        executeStatement(string);
+
+        List<Appointment> appointments = new ArrayList<>();
+
+        try {
+            ResultSet set = getStatement().getResultSet();
+            while (set.next()) {
+                appointments.add(getFromSet(set));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return appointments;
+    }
+
+    //todo: de terminat metoda asta. De folosit metoda ||| getAll(int doctorId, LocalDate day) ||| de mai sus
+    public List<Appointment> getFreeSlots(int doctorId, LocalDate day) {
+        List<Appointment> appointments = getAll(doctorId, day);
+        List<Appointment> freeSlots = new ArrayList<>();
+
+        for (int i = 1; i < appointments.size(); i++) {
+            Appointment previous = appointments.get(i - 1);
+            Appointment next = appointments.get(i);
+            if (previous.getEndDate().compareTo(next.getStartDate()) > 0) {
+                freeSlots.add(Utils.getNewAppointment(doctorId, -1, previous.getEndDate(), next.getStartDate()));
+            }
+        }
+
+        return freeSlots;
+    }
 
     //update
     @Override
