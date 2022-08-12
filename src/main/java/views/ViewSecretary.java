@@ -1,5 +1,6 @@
 package views;
 
+import exceptions.AppointmentDoesNotExistException;
 import exceptions.AppointmentFailedException;
 import exceptions.TooManyResultsException;
 import helpers.Utils;
@@ -126,13 +127,34 @@ public class ViewSecretary implements View {
     }
 
     private void updateAppointment(Scanner scanner) {
+        System.out.println("Introduceti ID-ul programarii");
+        int appointmentId = Utils.parseInteger(scanner.nextLine(), -1);
 
+        if (appointmentId != -1) {
+            updateAppointment(appointmentId,scanner);
+        } else {
+            throw new AppointmentDoesNotExistException();
+        }
+    }
+
+    private void updateAppointment(int appointmentId, Scanner scanner) {
+        System.out.println("Introduceti noile valori ale programarii");
+        Appointment appointment = enquireAppointmentDetails(scanner, appointmentId);
+        try {
+            RepositoryLoad.appointmentRepository.update(appointment);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Eroare la modificare.");
+        }
     }
 
 
 
     //helpers
     private Appointment enquireAppointmentDetails(Scanner scanner) {
+        return enquireAppointmentDetails(scanner, -1);
+    }
+    private Appointment enquireAppointmentDetails(Scanner scanner, int appointmentId) {
         String[] patientName = new String[0];
         while (patientName.length < 2) {
             System.out.println("Introduceti prenumele si numele PACIENTULUI separate prin '" + NAME_SEPARATOR + "'");
@@ -168,7 +190,12 @@ public class ViewSecretary implements View {
         LocalDateTime startDate = LocalDateTime.of(date[0], date[1], date[2], time[0], time[1]);
         LocalDateTime endDate = startDate.plusMinutes(duration);
 
+        if (appointmentId > 0) {
+            return getNewAppointment(appointmentId, doctorId, patientId, startDate, endDate);
+        }
+
         return getNewAppointment(doctorId, patientId, startDate, endDate);
+
     }
 
     private int[] intFromScanner(Scanner scanner, String separator) {

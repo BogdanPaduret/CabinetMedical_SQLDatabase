@@ -13,6 +13,7 @@ public class Main {
     public static void main(String[] args) {
         viewLogInTest();
 //        methodNamesTest();
+//        toSQLStringArrayTest();
     }
 
     public static void viewLogInTest() {
@@ -42,5 +43,26 @@ public class Main {
         for (Method method : setters) {
             System.out.println(method.getName());
         }
+    }
+
+    public static void toSQLStringArrayTest() {
+        Integer[] ints = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+        String[] strings = {"ala", "bala", "portocala"};
+        String[] int2Strings = toSQLStringArray(ints, "%d");
+        String[] strings2Strings = toSQLStringArray(strings, "'%s'");
+        String[][] arrays = {int2Strings, strings2Strings};
+        for (String[] a : arrays) {
+            System.out.println("\n\n");
+            for (String string : a) {
+                System.out.println(string);
+            }
+        }
+    }
+    private static <T> String[] toSQLStringArray(T[] data, String format) {
+        String[] stringValues = new String[data.length];
+        for (int i = 0; i < data.length; i++) {
+            stringValues[i] = String.format(format, data[i]);
+        }
+        return stringValues;
     }
 }
