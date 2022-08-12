@@ -1,5 +1,6 @@
 import helpers.Utils;
 import models.appointments.Appointment;
+import repositories.Repository;
 import repositories.RepositoryLoad;
 import views.ViewLogIn;
 
@@ -17,8 +18,9 @@ public class Main {
     public static void viewLogInTest() {
         String databaseName = "testCabinetMedical";
         ViewLogIn viewLogIn = new ViewLogIn(databaseName);
+        RepositoryLoad.appointmentRepository.clear();
         RepositoryLoad.userRepository.clear();
-        Utils.fillRepository(Utils.generateRandomUsers(20, false), RepositoryLoad.userRepository);
+        Utils.fillRepository(Utils.generateRandomUniqueUsers(200, false), RepositoryLoad.userRepository);
         viewLogIn.play();
     }
 

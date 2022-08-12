@@ -1,6 +1,7 @@
 package repositories;
 
 import models.appointments.Appointment;
+import models.users.User;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -8,42 +9,43 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static helpers.Constants.*;
+import static helpers.Utils.getNewAppointment;
+import static helpers.Utils.getNewUser;
 import static org.junit.jupiter.api.Assertions.*;
 
 class AppointmentRepositoryTest {
 
-
     //helpers
-    private void clearRepository() {
-
+    private void clearRepositories() {
+        appointmentRepository.clear();
+        userRepository.clear();
     }
-    private List<Appointment> generateRandomAppointments(int howMany, boolean withId) {
-        int[] doctorIds = new int[howMany];
-        int[] patientIds = new int[howMany];
-        String[] startDates = new String[howMany];
-        String[] endDates = new String[howMany];
-
-        int[][] idList = {doctorIds, patientIds};
-
-        for (int[] ids : idList) {
-            int c = 1;
-            for (int i = 0; i < ids.length; i++) {
-                ids[i] = c;
-                c++;
-            }
-        }
 
 
-        return null;
-    }
-    private void fillRepository(List<Appointment> list) {
+    //instance variables
+    AppointmentRepository appointmentRepository;
+    UserRepository userRepository;
+    String databaseName = "testCabinetMedical";
 
-    }
-    private int getRandomNumber(int min, int max) {
-        return (int) Math.floor(Math.random() * (max + 1 - min)) + min;
-    }
+
     @BeforeEach
     void setUp() {
+
+        appointmentRepository = new AppointmentRepository(
+                "jdbc:mysql://localhost:3306/" + databaseName + "?" + "autoReconnect=true&useSSL=false",
+                "root",
+                "root"
+        );
+
+        userRepository = new UserRepository(
+                "jdbc:mysql://localhost:3306/" + databaseName + "?" + "autoReconnect=true&useSSL=false",
+                "root",
+                "root"
+        );
+
+        clearRepositories();
+
     }
 
     @AfterEach
@@ -52,6 +54,42 @@ class AppointmentRepositoryTest {
 
     @Test
     void insertTest() {
+
+        String[] types = USERS_ARRAY;
+        String[] firstNames = {
+                "Andrei",
+                "Bogdan",
+                "Costel"
+        };
+        String[] lastNames = {
+                "Vasilescu",
+                "Petrescu",
+                "Popescu"
+        };
+
+        assertEquals(types.length, firstNames.length, lastNames.length);
+
+        for (int i = 0; i < types.length; i++) {
+            User user = getNewUser(types[i], firstNames[i], lastNames[i]);
+            if (user != null) {
+                userRepository.insert(user);
+            }
+        }
+
+        assertEquals(3, userRepository.getAll().size());
+
+        appointmentRepository.insert(new Appointment[]{
+                getNewAppointment(1, 2,
+                        LocalDateTime.of(2022, 9, 20, 18, 30),
+                        LocalDateTime.of(2022, 9, 20, 19, 0)),
+                getNewAppointment(1, 2,
+                        LocalDateTime.of(2022, 9, 21, 18, 30),
+                        LocalDateTime.of(2022, 9, 21, 19, 0)),
+                getNewAppointment(1, 2,
+                        LocalDateTime.of(2022, 9, 22, 18, 30),
+                        LocalDateTime.of(2022, 9, 22, 19, 0)),
+        });
+
     }
 
     @Test

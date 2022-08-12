@@ -1,5 +1,6 @@
 package helpers;
 
+import com.sun.source.tree.Tree;
 import exceptions.NoUserTypeException;
 import exceptions.UserDoesNotExistException;
 import models.appointments.Appointment;
@@ -16,9 +17,7 @@ import java.sql.Statement;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 import static helpers.Constants.*;
 
@@ -228,7 +227,101 @@ public class Utils {
 
         return users;
     }
-    public static void fillRepository(List<User> list, UserRepository userRepository) {
+    public static List<User> generateRandomUniqueUsers(int howMany, boolean withId) {
+        String[] types = USERS_ARRAY;
+        String[] firstNames = {
+                "Andrei",
+                "Bogdan",
+                "Dumitru",
+                "Vlad",
+                "Costel",
+                "Vasile",
+                "Ana",
+                "Dana",
+                "Victor",
+                "Maria",
+                "Bianca",
+                "Georgeta",
+                "Georgiana",
+                "Victoria",
+                "Angela",
+                "Cristian",
+                "Arabela",
+                "Anabela"
+        };
+        String[] lastNames = {
+                "Dumitriu",
+                "Vasilescu",
+                "Neculce",
+                "Aciobanesei",
+                "Pietraru",
+                "Carstescu",
+                "Mircea",
+                "Atudoresei",
+                "Violoncescu",
+                "Hazarescu",
+                "Ceapa",
+                "Venghea",
+                "Mironescu",
+                "Dumitrescu",
+                "Mihailovik",
+                "Bespresdeu",
+                "Neghea",
+                "Ciorvea",
+                "Cheplea",
+                "Vectocsi",
+                "Fesildea"
+        };
+
+        List<User> users = new ArrayList<>();
+
+        int coefficient = 0;
+
+        int c = 0;
+
+        int tries = 0;
+
+        Set<User> uniques = new HashSet<>();
+
+        while (uniques.size() < howMany) {
+            String firstName = firstNames[(int) Math.floor(Math.random() * firstNames.length + coefficient)];
+            String lastName = lastNames[(int) Math.floor(Math.random() * lastNames.length + coefficient)];
+            User user;
+            user = getNewUser(USER_PATIENT, -1, firstName, lastName);
+            if (user != null) {
+                if (uniques.add(user)) {
+                    tries = 0;
+                    c++;
+                }
+            }
+            tries++;
+            if (tries > howMany) {
+                System.out.println("No more combinations after " + c + " inputs");
+                break;
+            }
+        }
+
+        c = 1;
+
+        for (User unique : uniques) {
+            String type = types[(int) Math.floor(Math.random() * types.length + coefficient)];
+            String firstName = unique.getFirstName();
+            String lastName = unique.getLastName();
+            User user;
+            if (withId) {
+                user = getNewUser(type, c, firstName, lastName);
+            } else {
+                user = getNewUser(type, firstName, lastName);
+            }
+            if (user != null) {
+                users.add(user);
+                c++;
+            }
+        }
+
+        return users;
+    }
+    public static void fillRepository(Collection<User> list, UserRepository userRepository) {
         for (User user : list) {
             userRepository.insert(user);
         }

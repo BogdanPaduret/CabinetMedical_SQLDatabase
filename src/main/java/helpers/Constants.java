@@ -17,5 +17,6 @@ public class Constants {
     //tables
     public static final String USERS_TABLE_NAME = "users";
     public static final String APPOINTMENTS_TABLE_NAME = "appointments";
+    public static final String HOLIDAYS_TABLE_NAME = "holidays";
 
 }

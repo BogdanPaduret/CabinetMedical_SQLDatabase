@@ -1,6 +1,7 @@
 package views;
 
 import exceptions.AppointmentFailedException;
+import exceptions.TooManyResultsException;
 import helpers.Utils;
 import models.appointments.Appointment;
 import models.users.Secretary;
@@ -91,26 +92,35 @@ public class ViewSecretary implements View {
             System.out.println("Programarea nu poate fi facuta cu acest medic in acest interval orar." +
                     "\nAlegeti un alt doctor sau un alt interval orar."
             );
+        } catch (TooManyResultsException e) {
+            System.out.println("Prea multi utilizatori cu acelasi nume si aceeasi functie.");
         }
 
     }
 
     private void cancelAppointment(Scanner scanner) {
+        String success = "Programare anulata cu succes!";
+        String idNotFound = "O programare cu ID-ul introdus nu exista.";
+
         System.out.println("Introduceti ID-ul programarii");
         int id = Utils.parseInteger(scanner.nextLine(), -1);
-        if (id != -1) {
+        Appointment appointment = RepositoryLoad.appointmentRepository.get(id);
+        if (appointment == null) {
+            System.out.println(idNotFound);
             try {
                 RepositoryLoad.appointmentRepository.delete(enquireAppointmentDetails(scanner));
+                System.out.println(success);
             } catch (AppointmentFailedException e) {
                 e.printStackTrace();
-                System.out.println("Eroare la introducerea detaliilor");
+                System.out.println("Eroare la introducerea detaliilor. Nu exista o programare cu detaliile introduse.");
             }
         } else {
             try {
                 RepositoryLoad.appointmentRepository.delete(id);
+                System.out.println(success);
             } catch (AppointmentFailedException e) {
                 e.printStackTrace();
-                System.out.println("Programare cu ID-ul introdus nu exista");
+                System.out.println(idNotFound);
             }
         }
     }
@@ -123,10 +133,17 @@ public class ViewSecretary implements View {
 
     //helpers
     private Appointment enquireAppointmentDetails(Scanner scanner) {
-        System.out.println("Introduceti prenumele si numele PACIENTULUI separate prin '" + NAME_SEPARATOR + "'");
-        String[] patientName = scanner.nextLine().split(NAME_SEPARATOR);
-        System.out.println("Introduceti prenumele si numele DOCTORULUI separate prin '" + NAME_SEPARATOR + "'");
-        String[] doctorName = scanner.nextLine().split(NAME_SEPARATOR);
+        String[] patientName = new String[0];
+        while (patientName.length < 2) {
+            System.out.println("Introduceti prenumele si numele PACIENTULUI separate prin '" + NAME_SEPARATOR + "'");
+            patientName = scanner.nextLine().split(NAME_SEPARATOR);
+        }
+
+        String[] doctorName = new String[0];
+        while (doctorName.length < 2) {
+            System.out.println("Introduceti prenumele si numele DOCTORULUI separate prin '" + NAME_SEPARATOR + "'");
+            doctorName = scanner.nextLine().split(NAME_SEPARATOR);
+        }
 
         int[] date = new int[0];
         while (date.length < 3 && multiplyIntArray(date) == 0) {

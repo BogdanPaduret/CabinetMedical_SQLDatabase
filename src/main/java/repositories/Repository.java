@@ -27,7 +27,7 @@ public abstract class Repository<T> {
     }
     public Repository() {
         this(
-                "jdbc:mysql://localhost:3306/cabinetmedical?" + "autoReconnect=true&useSSL=false",
+                "jdbc:mysql://localhost:3306/testcabinetmedical?" + "autoReconnect=true&useSSL=false",
                 "root",
                 "root"
         );
@@ -82,8 +82,4 @@ public abstract class Repository<T> {
     public abstract void delete(int id);
     public abstract void clear();
 
-    //helpers
-    public static <T> T getFromSet(ResultSet set) throws SQLException {
-        return null;
-    }
 }

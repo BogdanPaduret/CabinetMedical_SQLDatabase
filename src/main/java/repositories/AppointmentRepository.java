@@ -1,10 +1,9 @@
 package repositories;
 
-import exceptions.AppointmentDoesNotExistException;
-import exceptions.TooManyResultsException;
-import exceptions.UserDoesNotExistException;
+import exceptions.*;
 import helpers.Utils;
 import models.appointments.Appointment;
+import models.appointments.Holiday;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -16,8 +15,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import static helpers.Constants.APPOINTMENTS_TABLE_NAME;
-import static helpers.Constants.USERS_TABLE_NAME;
+import static helpers.Constants.*;
 import static helpers.Utils.*;
 
 public class AppointmentRepository extends Repository<Appointment> {
@@ -45,17 +43,23 @@ public class AppointmentRepository extends Repository<Appointment> {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-M-d HH:mm");
 
         for (Appointment a : appointments) {
-            int doctorId = a.getDoctorId();
-            int patientId = a.getPatientId();
-            String startDate = a.getStartDate().format(formatter);
-            String endDate = a.getEndDate().format(formatter);
-            string += String.format("\n(%d, %d, '%s', '%s'", doctorId, patientId, startDate, endDate);
+//            try {
+//                if (!isHoliday(a)) {
+                    int doctorId = a.getDoctorId();
+                    int patientId = a.getPatientId();
+                    String startDate = a.getStartDate().format(formatter);
+                    String endDate = a.getEndDate().format(formatter);
+                    string += String.format("\n(%d, %d, '%s', '%s')", doctorId, patientId, startDate, endDate);
+//                } else {
+//                    throw new AppointmentOnHolidayException(a.getStartDate() + "falls on a holiday for the interested party. Appointment not inserted.");
+//                }
+//            } catch (AppointmentFailedException e) {
+//                e.printStackTrace();
+//            }
         }
 
         executeStatement(string);
     }
-
-
 
 
     /*
@@ -65,11 +69,37 @@ public class AppointmentRepository extends Repository<Appointment> {
 
 
     //read
+    public boolean isHoliday(Appointment appointment) {
+//        return getHolidays(appointment).size() != 0;
+        return false;
+    }
+    public List<Holiday> getHolidays(Appointment appointment) {
+        String string = Utils.querySelect(HOLIDAYS_TABLE_NAME);
+
+        string += String.format("\nWHERE ('%s' BETWEEN startDate AND endDate) AND (doctorId = %d OR patientId = %d OR (doctorId IS NULL AND patientId IS NULL))",
+                Utils.toSQLDateTimeString(appointment.getStartDate()), appointment.getDoctorId(), appointment.getPatientId());
+
+        executeStatement(string);
+
+        List<Holiday> holidays = new ArrayList<>();
+
+        try {
+            ResultSet set = getStatement().getResultSet();
+            while (set.next()) {
+                holidays.add((Holiday) getFromSet(set));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return holidays;
+    }
+
     @Override
     public Appointment get(int id) {
         String string = Utils.querySelect(APPOINTMENTS_TABLE_NAME);
 
-        string += String.format("\nWHERE id = %d", id);
+        string += String.format("\nWHERE appointmentId = %d", id);
 
         executeStatement(string);
 
@@ -167,11 +197,18 @@ public class AppointmentRepository extends Repository<Appointment> {
     //delete
     @Override
     public void delete(Appointment obj) {
+        String string = "DELETE FROM " + APPOINTMENTS_TABLE_NAME;
+        string += String.format("\nWHERE doctorId = %d AND patientId = %d AND startDateTime = '%s' AND endDateTime = '%s'",
+                obj.getDoctorId(), obj.getPatientId(), Utils.toSQLDateTimeString(obj.getStartDate()), Utils.toSQLDateTimeString(obj.getEndDate()));
 
+        executeStatement(string);
     }
     @Override
     public void delete(int id) {
+        String string = "DELETE FROM " + APPOINTMENTS_TABLE_NAME;
+        string += String.format("\nWHERE appointmentId = %d", id);
 
+        executeStatement(string);
     }
 
     @Override
@@ -188,7 +225,7 @@ public class AppointmentRepository extends Repository<Appointment> {
 
 
     //helpers
-    public static Appointment getFromSet(ResultSet set) throws SQLException {
+    private Appointment getFromSet(ResultSet set) throws SQLException {
         int appointmentId = set.getInt(1);
         int doctorId = set.getInt(2);
         int patientId = set.getInt(3);
@@ -205,6 +242,7 @@ public class AppointmentRepository extends Repository<Appointment> {
 
         return getNewAppointment(appointmentId, doctorId, patientId, startDate, endDate);
     }
+
 
 
 

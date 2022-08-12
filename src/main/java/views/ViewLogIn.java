@@ -111,7 +111,7 @@ public class ViewLogIn implements View {
             } catch (NumberFormatException e) {
                 e.printStackTrace();
             }
-            String name = input[1];
+            String name = input[1].trim();
 
             try {
                 setUser(id, name);
@@ -135,7 +135,7 @@ public class ViewLogIn implements View {
         if (input.length != 2 || !Utils.typeExists(type)) {
             System.out.println(abort);
         } else {
-            String[] fullName = input[1].split(NAME_SEPARATOR);
+            String[] fullName = input[1].trim().split(NAME_SEPARATOR);
             RepositoryLoad.userRepository.insert(Utils.getNewUser(type, fullName[0], fullName[1]));
         }
 

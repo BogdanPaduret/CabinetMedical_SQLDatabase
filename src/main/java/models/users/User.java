@@ -1,5 +1,7 @@
 package models.users;
 
+import java.util.Objects;
+
 import static helpers.Constants.NAME_SEPARATOR;
 
 public abstract class User implements Comparable<User> {
@@ -64,8 +66,28 @@ public abstract class User implements Comparable<User> {
 
         Integer thisId = this.getId();
         Integer userId = user.getId();
+        String thisFN = this.getFirstName();
+        String userFN = user.getFirstName();
+        String thisLN = this.getLastName();
+        String userLN = user.getLastName();
 
-        return thisId.compareTo(userId);
+        int id = thisId.compareTo(userId);
+        int firstName = thisFN.compareTo(userFN);
+        int lastName = thisLN.compareTo(userLN);
+
+        if (id != 0) {
+            return id;
+        } else if (lastName != 0) {
+            return lastName;
+        } else if (firstName != 0) {
+            return firstName;
+        } else return this.getType().compareTo(user.getType());
+
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(type, id, firstName, lastName);
     }
     @Override
     public String toString() {

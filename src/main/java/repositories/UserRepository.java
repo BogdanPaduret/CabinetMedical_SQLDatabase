@@ -70,10 +70,11 @@ public class UserRepository extends Repository<User> {
     public int get(User user) throws UserDoesNotExistException, TooManyResultsException {
         String string = Utils.querySelect(USERS_TABLE_NAME);
 
+        String type = user.getType();
         String firstName = user.getFirstName();
         String lastName = user.getLastName();
 
-        string += String.format("\nWHERE firstName = '%s', lastName= '%s'", firstName, lastName);
+        string += String.format("\nWHERE type = '%s' AND firstName = '%s' AND lastName= '%s'", type, firstName, lastName);
 
         executeStatement(string);
 
@@ -200,7 +201,7 @@ public class UserRepository extends Repository<User> {
 
 
     //helpers
-    public static User getFromSet(ResultSet set) throws SQLException {
+    private User getFromSet(ResultSet set) throws SQLException {
         String type = set.getString(1);
         int id = set.getInt(2);
         String firstName = set.getString(3);
