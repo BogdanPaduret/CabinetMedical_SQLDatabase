@@ -6,9 +6,11 @@ import exceptions.TooManyResultsException;
 import helpers.Utils;
 import models.appointments.Appointment;
 import models.users.Secretary;
+import models.users.User;
 import repositories.RepositoryLoad;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Scanner;
 
 import static helpers.Constants.*;
@@ -54,13 +56,10 @@ public class ViewSecretary implements View {
                 case 1 -> createAppointment(scanner);
                 case 2 -> cancelAppointment(scanner);
                 case 3 -> updateAppointment(scanner);
-                /*
-                todo
-                 case 6 -> {}
-                 case 7 -> {}
-                 case 8 -> {}
-                 case 9 -> {}
-                 */
+                case 6 -> showAllUsers();
+                case 7 -> showAllDoctors();
+                case 8 -> showAllPatients();
+                case 9 -> showAllAppointments();
             }
         }
 
@@ -88,7 +87,10 @@ public class ViewSecretary implements View {
 
     private void createAppointment(Scanner scanner) {
         try {
-            RepositoryLoad.appointmentRepository.insert(enquireAppointmentDetails(scanner));
+            Appointment appointment = enquireAppointmentDetails(scanner);
+            RepositoryLoad.appointmentRepository.insert(appointment);
+            System.out.println("Programare efectuata cu succes cu ID-ul " + RepositoryLoad.appointmentRepository.get(appointment));
+
         } catch (AppointmentFailedException e) {
             System.out.println("Programarea nu poate fi facuta cu acest medic in acest interval orar." +
                     "\nAlegeti un alt doctor sau un alt interval orar."
@@ -136,18 +138,48 @@ public class ViewSecretary implements View {
             throw new AppointmentDoesNotExistException();
         }
     }
-
     private void updateAppointment(int appointmentId, Scanner scanner) {
         System.out.println("Introduceti noile valori ale programarii");
-        Appointment appointment = enquireAppointmentDetails(scanner, appointmentId);
         try {
+            Appointment appointment = enquireAppointmentDetails(scanner, appointmentId);
             RepositoryLoad.appointmentRepository.update(appointment);
+            System.out.println("Modificare realizata cu succes!");
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Eroare la modificare.");
         }
     }
 
+    private void showAllUsers() {
+        showAllUsers(USERS_ARRAY);
+    }
+    private void showAllDoctors() {
+        showAllUsers(new String[]{USER_DOCTOR});
+    }
+    private void showAllPatients() {
+        showAllUsers(new String[]{USER_PATIENT});
+    }
+
+    private void showAllUsers(String[] types) {
+        for (String string : types) {
+            System.out.println("\nToti utilizatorii de tip " + string.toUpperCase());
+            showAllUserByType(string);
+        }
+    }
+
+    private void showAllAppointments() {
+        List<Appointment> appointments = RepositoryLoad.appointmentRepository.getAll();
+        for (Appointment a : appointments) {
+            String doctorName = RepositoryLoad.userRepository.get(a.getDoctorId()).getUserName();
+            String patientName = RepositoryLoad.userRepository.get(a.getPatientId()).getUserName();
+            String string = "";
+            string += "\n\nAppointment ID: " + a.getAppointmentId();
+            string += "\nDoctor: " + doctorName;
+            string += "\nPatient: " + patientName;
+            string += "\n" + Utils.toStringAppointmentDates(a);
+            System.out.println(string);
+        }
+    }
 
 
     //helpers
@@ -221,6 +253,13 @@ public class ViewSecretary implements View {
             r = 0;
         }
         return r;
+    }
+
+    private void showAllUserByType(String type) {
+        List<User> users = RepositoryLoad.userRepository.getAll(type);
+        for (User user : users) {
+            System.out.println(user);
+        }
     }
 
 }

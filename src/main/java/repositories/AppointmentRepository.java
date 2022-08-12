@@ -4,13 +4,17 @@ import exceptions.*;
 import helpers.Utils;
 import models.appointments.Appointment;
 import models.appointments.Holiday;
+import models.users.Doctor;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.security.InvalidParameterException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,21 +47,22 @@ public class AppointmentRepository extends Repository<Appointment> {
         string += "\nVALUES";
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-M-d HH:mm");
+        DateTimeFormatter dayFormatter = DateTimeFormatter.ofPattern("EEEE dd-MM-yyyy 'at' HH:mm");
 
         for (Appointment a : appointments) {
-//            try {
-//                if (!isHoliday(a)) {
+            try {
+                if (dateTimeFree(a, (Doctor) RepositoryLoad.userRepository.get(a.getDoctorId()))) {
                     int doctorId = a.getDoctorId();
                     int patientId = a.getPatientId();
                     String startDate = a.getStartDate().format(formatter);
                     String endDate = a.getEndDate().format(formatter);
                     string += String.format("\n(%d, %d, '%s', '%s')", doctorId, patientId, startDate, endDate);
-//                } else {
-//                    throw new AppointmentOnHolidayException(a.getStartDate() + "falls on a holiday for the interested party. Appointment not inserted.");
-//                }
-//            } catch (AppointmentFailedException e) {
-//                e.printStackTrace();
-//            }
+                } else {
+                    throw new AppointmentFailedException("Appointment not possible on " + a.getStartDate().format(dayFormatter) + ".\nPlease notice that the working hours are 09:00 to 17:00 everyday except weekends.");
+                }
+            } catch (AppointmentFailedException e) {
+                e.printStackTrace();
+            }
         }
 
         executeStatement(string);
@@ -65,6 +70,53 @@ public class AppointmentRepository extends Repository<Appointment> {
 
 
     //read
+    public boolean dateTimeFree(Appointment appointment, Doctor doctor) {
+        boolean isDateFree = isDateFree(appointment.getStartDate());
+        boolean isTimeFree = isTimeFree(appointment, doctor);
+
+        return isDateFree && isTimeFree;
+    }
+
+    private boolean isTimeFree(Appointment appointment, Doctor doctor) {
+        LocalTime startTime = LocalTime.of(9, 0);
+        LocalTime endTime = LocalTime.of(17, 0);
+
+        LocalTime start = appointment.getStartDate().toLocalTime();
+        LocalTime end = appointment.getEndDate().toLocalTime();
+
+        if (start.compareTo(startTime) >= 0 && end.compareTo(endTime) <= 0) {
+            String string = Utils.querySelect(APPOINTMENTS_TABLE_NAME);
+            string += String.format("\nWHERE ('%s' > startDateTime AND '%s' < endDateTime) AND " +
+                            "('%s' > startDateTime AND '%s' < endDateTime) AND " +
+                            "doctorId = %d",
+                    appointment.getStartDate(), appointment.getStartDate(), appointment.getEndDate(), appointment.getEndDate(), doctor.getId());
+            executeStatement(string);
+
+            try {
+                ResultSet set = getStatement().getResultSet();
+                if (set.next()) {
+                    return false;
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+        } else {
+            return false;
+        }
+
+        return true;
+    }
+    private boolean isDateFree(LocalDateTime startDate) {
+        DayOfWeek[] freeWeekDays = {DayOfWeek.SUNDAY, DayOfWeek.SATURDAY};
+        for (DayOfWeek day : freeWeekDays) {
+            if (startDate.getDayOfWeek().equals(day)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public boolean isHoliday(Appointment appointment) {
 //        return getHolidays(appointment).size() != 0;
         return false;
@@ -115,7 +167,6 @@ public class AppointmentRepository extends Repository<Appointment> {
 
         return appointment;
     }
-
     @Override
     public int get(Appointment obj) throws AppointmentDoesNotExistException, TooManyResultsException {
         int doctorId = obj.getDoctorId();
@@ -125,7 +176,7 @@ public class AppointmentRepository extends Repository<Appointment> {
 
         String string = Utils.querySelect(APPOINTMENTS_TABLE_NAME);
 
-        string += String.format("\nWHERE doctorId = %d, patientId = %d, startDateTime = '%s', endDateTime = '%s'",
+        string += String.format("\nWHERE doctorId = %d AND patientId = %d AND startDateTime = '%s' AND endDateTime = '%s'",
                 doctorId, patientId, Utils.toSQLDateTimeString(startDate), Utils.toSQLDateTimeString(endDate));
 
         executeStatement(string);
@@ -176,51 +227,6 @@ public class AppointmentRepository extends Repository<Appointment> {
         return getAllHelper(variableNames, stringValues);
     }
 
-    private <T, U> void checkLengths(T[] array1, U[] array2) {
-        if (array1.length != array2.length) {
-            throw new InvalidParameterException();
-        }
-    }
-    private <T> String[] toSQLStringArray(T[] data, String format) {
-        String[] stringValues = new String[data.length];
-        for (int i = 0; i < data.length; i++) {
-            stringValues[i] = String.format(format, data[i].toString());
-        }
-        return stringValues;
-    }
-    private List<Appointment> getAllHelper(String[] variableName, String[] variableValue) {
-        String string = Utils.querySelect(APPOINTMENTS_TABLE_NAME);
-
-        if (variableName.length > 0) {
-            string += "\nWHERE";
-            for (int i = 0; i < variableName.length; i++) {
-                if (i > 0) {
-                    string += " AND";
-                }
-                string += String.format(" %s = %s", variableName[i], variableValue[i]);
-            }
-        }
-
-        executeStatement(string);
-
-        List<Appointment> appointments = new ArrayList<>();
-
-        try {
-            ResultSet set = getStatement().getResultSet();
-            while (set.next()) {
-                appointments.add(getFromSet(set));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-
-        if (appointments.size() == 0) {
-            appointments = null;
-        }
-
-        return appointments;    }
-
 
     //update
     @Override
@@ -230,7 +236,7 @@ public class AppointmentRepository extends Repository<Appointment> {
         string += "UPDATE " + APPOINTMENTS_TABLE_NAME;
         string += String.format("\nSET doctorId = %d, patientId = %d, startDateTime = '%s', endDateTime = '%s'",
                 o.getDoctorId(), o.getPatientId(), Utils.toSQLDateTimeString(o.getStartDate()), Utils.toSQLDateTimeString(o.getEndDate()));
-        string += String.format("\nWHERE id = '%d'", o.getAppointmentId());
+        string += String.format("\nWHERE appointmentId = '%d'", o.getAppointmentId());
 
         executeStatement(string);
     }
@@ -284,6 +290,51 @@ public class AppointmentRepository extends Repository<Appointment> {
 
         return getNewAppointment(appointmentId, doctorId, patientId, startDate, endDate);
     }
+
+    private <T, U> void checkLengths(T[] array1, U[] array2) {
+        if (array1.length != array2.length) {
+            throw new InvalidParameterException();
+        }
+    }
+    private <T> String[] toSQLStringArray(T[] data, String format) {
+        String[] stringValues = new String[data.length];
+        for (int i = 0; i < data.length; i++) {
+            stringValues[i] = String.format(format, data[i].toString());
+        }
+        return stringValues;
+    }
+    private List<Appointment> getAllHelper(String[] variableName, String[] variableValue) {
+        String string = Utils.querySelect(APPOINTMENTS_TABLE_NAME);
+
+        if (variableName.length > 0) {
+            string += "\nWHERE";
+            for (int i = 0; i < variableName.length; i++) {
+                if (i > 0) {
+                    string += " AND";
+                }
+                string += String.format(" %s = %s", variableName[i], variableValue[i]);
+            }
+        }
+
+        executeStatement(string);
+
+        List<Appointment> appointments = new ArrayList<>();
+
+        try {
+            ResultSet set = getStatement().getResultSet();
+            while (set.next()) {
+                appointments.add(getFromSet(set));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+
+        if (appointments.size() == 0) {
+            appointments = null;
+        }
+
+        return appointments;    }
 
 
 

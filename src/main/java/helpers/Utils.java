@@ -9,6 +9,7 @@ import models.users.Patient;
 import models.users.Secretary;
 import models.users.User;
 import repositories.Repository;
+import repositories.RepositoryLoad;
 import repositories.UserRepository;
 
 import java.sql.ResultSet;

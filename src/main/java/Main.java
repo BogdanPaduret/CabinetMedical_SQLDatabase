@@ -65,4 +65,12 @@ public class Main {
         }
         return stringValues;
     }
+
+
+    /*
+    todo
+        care-i cea mai rapida programare intr-o zi
+        care-i slotul cel mai mare la un anumit doctor
+        ce doctori sunt disponibili intr-o anumita perioada
+     */
 }
