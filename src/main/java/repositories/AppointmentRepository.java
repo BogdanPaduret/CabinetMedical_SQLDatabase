@@ -6,6 +6,7 @@ import models.appointments.Appointment;
 import models.appointments.Holiday;
 import models.users.Doctor;
 
+import javax.print.Doc;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.security.InvalidParameterException;
@@ -16,10 +17,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+import java.util.function.DoubleConsumer;
 
 import static helpers.Constants.*;
 import static helpers.Utils.*;
@@ -78,8 +77,8 @@ public class AppointmentRepository extends Repository<Appointment> {
     }
 
     private boolean isTimeFree(Appointment appointment, Doctor doctor) {
-        LocalTime startTime = LocalTime.of(9, 0);
-        LocalTime endTime = LocalTime.of(17, 0);
+        LocalTime startTime = Doctor.getStartTime();
+        LocalTime endTime = Doctor.getEndTime();
 
         LocalTime start = appointment.getStartDate().toLocalTime();
         LocalTime end = appointment.getEndDate().toLocalTime();
@@ -108,13 +107,12 @@ public class AppointmentRepository extends Repository<Appointment> {
         return true;
     }
     private boolean isDateFree(LocalDateTime startDate) {
-        DayOfWeek[] freeWeekDays = {DayOfWeek.SUNDAY, DayOfWeek.SATURDAY};
-        for (DayOfWeek day : freeWeekDays) {
+        for (DayOfWeek day : Doctor.getWorkDays()) {
             if (startDate.getDayOfWeek().equals(day)) {
-                return false;
+                return true;
             }
         }
-        return true;
+        return false;
     }
 
     public boolean isHoliday(Appointment appointment) {
@@ -248,20 +246,46 @@ public class AppointmentRepository extends Repository<Appointment> {
         return appointments;
     }
 
-    //todo: de terminat metoda asta. De folosit metoda ||| getAll(int doctorId, LocalDate day) ||| de mai sus
+    //todo: de terminat metoda asta
     public List<Appointment> getFreeSlots(int doctorId, LocalDate day) {
         List<Appointment> appointments = getAll(doctorId, day);
         List<Appointment> freeSlots = new ArrayList<>();
+        Iterator<Appointment> iterator = appointments.iterator();
 
-        for (int i = 1; i < appointments.size(); i++) {
-            Appointment previous = appointments.get(i - 1);
-            Appointment next = appointments.get(i);
-            if (previous.getEndDate().compareTo(next.getStartDate()) > 0) {
-                freeSlots.add(Utils.getNewAppointment(doctorId, -1, previous.getEndDate(), next.getStartDate()));
+        LocalTime previousEndTime = Doctor.getStartTime();
+        LocalTime nextStartTime;
+
+        Appointment appointment;
+
+        while (iterator.hasNext()) {
+            Appointment next = iterator.next();
+
+            nextStartTime = next.getStartDate().toLocalTime();
+
+            appointment = createFreeSlotAppointment(doctorId, previousEndTime, nextStartTime, day);
+            if (appointment != null) {
+                freeSlots.add(appointment);
             }
+
+            previousEndTime = next.getEndDate().toLocalTime();
+        }
+
+        nextStartTime = Doctor.getEndTime();
+
+        appointment = createFreeSlotAppointment(doctorId, previousEndTime, nextStartTime, day);
+        if (appointment != null) {
+            freeSlots.add(appointment);
         }
 
         return freeSlots;
+    }
+    private Appointment createFreeSlotAppointment(int doctorId, LocalTime startTime, LocalTime endTime, LocalDate day) {
+        if (startTime.isBefore(endTime)) {
+            LocalDateTime start = startTime.atDate(day);
+            LocalDateTime end = endTime.atDate(day);
+            return getNewAppointment(doctorId, -1, start, end);
+        }
+        return null;
     }
 
     //update
