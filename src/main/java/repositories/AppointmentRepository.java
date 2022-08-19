@@ -230,20 +230,23 @@ public class AppointmentRepository extends Repository<Appointment> {
         string += String.format("\nWHERE doctorId = %d AND startDateTime BETWEEN '%s' AND '%s'",
                 doctorId, Utils.toSQLDateTimeString(day.atTime(9, 0)), Utils.toSQLDateTimeString(day.atTime(17, 0)));
         string += "\nORDER BY startDateTime";
-        executeStatement(string);
 
-        List<Appointment> appointments = new ArrayList<>();
+        return getAllFromSQLString(string);
 
-        try {
-            ResultSet set = getStatement().getResultSet();
-            while (set.next()) {
-                appointments.add(getFromSet(set));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return appointments;
+//        executeStatement(string);
+//
+//        List<Appointment> appointments = new ArrayList<>();
+//
+//        try {
+//            ResultSet set = getStatement().getResultSet();
+//            while (set.next()) {
+//                appointments.add(getFromSet(set));
+//            }
+//        } catch (SQLException e) {
+//            e.printStackTrace();
+//        }
+//
+//        return appointments;
     }
 
     //todo: de terminat metoda asta
@@ -279,6 +282,10 @@ public class AppointmentRepository extends Repository<Appointment> {
 
         return freeSlots;
     }
+    public List<Appointment> getFreeSlots(int doctorId, int year, int month, int dayOfMonth) {
+        LocalDate day = LocalDate.of(year, month, dayOfMonth);
+        return getFreeSlots(doctorId, day);
+    }
     private Appointment createFreeSlotAppointment(int doctorId, LocalTime startTime, LocalTime endTime, LocalDate day) {
         if (startTime.isBefore(endTime)) {
             LocalDateTime start = startTime.atDate(day);
@@ -288,6 +295,9 @@ public class AppointmentRepository extends Repository<Appointment> {
         return null;
     }
 
+    public List<Appointment> getFreeSlots(int howMany, LocalDateTime startDateTime) {
+        return null;
+    }
     //update
     @Override
     public void update(Appointment o) {
@@ -376,6 +386,30 @@ public class AppointmentRepository extends Repository<Appointment> {
             }
         }
 
+        return getAllFromSQLString(string);
+
+//        executeStatement(string);
+//
+//        List<Appointment> appointments = new ArrayList<>();
+//
+//        try {
+//            ResultSet set = getStatement().getResultSet();
+//            while (set.next()) {
+//                appointments.add(getFromSet(set));
+//            }
+//        } catch (SQLException e) {
+//            e.printStackTrace();
+//        }
+//
+//
+//        if (appointments.size() == 0) {
+//            appointments = null;
+//        }
+//
+//        return appointments;
+    }
+
+    private List<Appointment> getAllFromSQLString(String string) {
         executeStatement(string);
 
         List<Appointment> appointments = new ArrayList<>();
@@ -394,9 +428,8 @@ public class AppointmentRepository extends Repository<Appointment> {
             appointments = null;
         }
 
-        return appointments;    }
-
-
-
+        return appointments;
+    }
 
 }
+

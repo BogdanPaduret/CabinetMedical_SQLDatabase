@@ -122,7 +122,7 @@ public class Appointment implements Comparable<Appointment> {
     public String toString() {
         String string = "Appointment #"+appointmentId;
         string += "\nAppointment of patient with ID " + patientId + " with doctor with ID " + doctorId + ":";
-        string += "\n" + Utils.toStringAppointmentDates(this);
+        string += "\n" + Utils.toStringAppointmentTimeline(this);
 
         return string;
     }

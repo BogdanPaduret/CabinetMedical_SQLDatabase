@@ -89,9 +89,32 @@ public class Utils {
         return getNewAppointment(-1, doctorId, patientId, startDate, endDate);
     }
 
-    public static String toStringAppointmentDates(Appointment appointment) {
+    public static String toStringAppointmentTimeline(Appointment appointment) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEEE, MMM dd, yyyy HH:mm a");
 
+        String string = "";
+
+        string += "Starts on " + appointment.getStartDate().format(formatter);
+        string += "\nEnds on " + appointment.getEndDate().format(formatter);
+
+        string += "\n" + toStringAppointmentDuration(appointment);
+
+        return string;
+    }
+    public static String toStringAppointmentTime(Appointment appointment) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm a");
+
+        String string = "";
+
+        string += appointment.getStartDate().format(formatter);
+        string += " - ";
+        string += appointment.getEndDate().format(formatter);
+        string += "\n" + toStringAppointmentDuration(appointment);
+
+        return string;
+    }
+
+    public static String toStringAppointmentDuration(Appointment appointment) {
         Duration duration = appointment.getDuration();
         int days = (int) duration.toDays();
 
@@ -102,10 +125,7 @@ public class Utils {
         int minutes = (int) duration.toMinutes();
 
         String string = "";
-
-        string += "Starts on " + appointment.getStartDate().format(formatter);
-        string += "\nEnds on " + appointment.getEndDate().format(formatter);
-        string += "\nDuration:";
+        string += "Duration:";
 
         int[] timeUnits = {days, hours, minutes};
         String[] singulars = {"day", "hour", "minute"};
@@ -128,6 +148,7 @@ public class Utils {
 
         return string;
     }
+
     public static String toSQLDateTimeString(LocalDateTime dateTime) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
         return dateTime.format(formatter);

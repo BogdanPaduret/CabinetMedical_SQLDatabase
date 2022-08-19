@@ -12,6 +12,7 @@ import repositories.RepositoryLoad;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Scanner;
 
@@ -171,7 +172,7 @@ public class ViewSecretary implements View {
             string += "\n\nAppointment ID: " + a.getAppointmentId();
             string += "\nDoctor: " + doctorName;
             string += "\nPatient: " + patientName;
-            string += "\n" + Utils.toStringAppointmentDates(a);
+            string += "\n" + Utils.toStringAppointmentTimeline(a);
             System.out.println(string);
         }
     }
@@ -183,8 +184,15 @@ public class ViewSecretary implements View {
             int[] date = enquireDate(scanner);
             LocalDate day = LocalDate.of(date[0], date[1], date[2]);
             List<Appointment> freeSlots = RepositoryLoad.appointmentRepository.getFreeSlots(doctorId, day);
-            for (Appointment a : freeSlots) {
-                System.out.println(a);
+            if (!freeSlots.isEmpty()) {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEEE, MMM dd, yyyy");
+                System.out.println("\nFree slots for doctor " + doctorName[0].toUpperCase() + " " + doctorName[1].toUpperCase() + " on " +
+                        day.format(formatter) + ":");
+                for (Appointment a : freeSlots) {
+                    System.out.println("\n" + Utils.toStringAppointmentTime(a));
+                }
+            } else {
+                System.out.println("Nu exista slot-uri libere cu doctorul ales in ziua aleasa.");
             }
         } catch (UserDoesNotExistException e) {
             e.printStackTrace();
