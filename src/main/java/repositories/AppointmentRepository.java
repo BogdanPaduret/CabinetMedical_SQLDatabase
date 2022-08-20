@@ -6,8 +6,6 @@ import models.appointments.Appointment;
 import models.appointments.Holiday;
 import models.users.Doctor;
 
-import javax.print.Doc;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.security.InvalidParameterException;
 import java.sql.ResultSet;
@@ -18,7 +16,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.function.DoubleConsumer;
 
 import static helpers.Constants.*;
 import static helpers.Utils.*;
@@ -224,7 +221,6 @@ public class AppointmentRepository extends Repository<Appointment> {
 
         return getAllHelper(variableNames, stringValues);
     }
-
     public List<Appointment> getAll(int doctorId, LocalDate day) {
         String string = Utils.querySelect(APPOINTMENTS_TABLE_NAME);
         string += String.format("\nWHERE doctorId = %d AND startDateTime BETWEEN '%s' AND '%s'",
@@ -232,47 +228,40 @@ public class AppointmentRepository extends Repository<Appointment> {
         string += "\nORDER BY startDateTime";
 
         return getAllFromSQLString(string);
+    }
+    public List<Appointment> getAll(LocalDate day) {
+        String string = Utils.querySelect(APPOINTMENTS_TABLE_NAME);
+        string += String.format("\nWHERE startDateTime BETWEEN '%s' AND '%s'",
+                Utils.toSQLDateTimeString(day.atTime(9, 0)), Utils.toSQLDateTimeString(day.atTime(17, 0)));
+        string += "\nORDER BY doctorId, startDateTime";
 
-//        executeStatement(string);
-//
-//        List<Appointment> appointments = new ArrayList<>();
-//
-//        try {
-//            ResultSet set = getStatement().getResultSet();
-//            while (set.next()) {
-//                appointments.add(getFromSet(set));
-//            }
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//        }
-//
-//        return appointments;
+        return getAllFromSQLString(string);
     }
 
-    //todo: de terminat metoda asta
     public List<Appointment> getFreeSlots(int doctorId, LocalDate day) {
         List<Appointment> appointments = getAll(doctorId, day);
         List<Appointment> freeSlots = new ArrayList<>();
-        Iterator<Appointment> iterator = appointments.iterator();
 
         LocalTime previousEndTime = Doctor.getStartTime();
         LocalTime nextStartTime;
 
         Appointment appointment;
 
-        while (iterator.hasNext()) {
-            Appointment next = iterator.next();
+        if (appointments != null) {
+            Iterator<Appointment> iterator = appointments.iterator();
+            while (iterator.hasNext()) {
+                Appointment next = iterator.next();
 
-            nextStartTime = next.getStartDate().toLocalTime();
+                nextStartTime = next.getStartDate().toLocalTime();
 
-            appointment = createFreeSlotAppointment(doctorId, previousEndTime, nextStartTime, day);
-            if (appointment != null) {
-                freeSlots.add(appointment);
+                appointment = createFreeSlotAppointment(doctorId, previousEndTime, nextStartTime, day);
+                if (appointment != null) {
+                    freeSlots.add(appointment);
+                }
+
+                previousEndTime = next.getEndDate().toLocalTime();
             }
-
-            previousEndTime = next.getEndDate().toLocalTime();
         }
-
         nextStartTime = Doctor.getEndTime();
 
         appointment = createFreeSlotAppointment(doctorId, previousEndTime, nextStartTime, day);
@@ -282,10 +271,69 @@ public class AppointmentRepository extends Repository<Appointment> {
 
         return freeSlots;
     }
+
     public List<Appointment> getFreeSlots(int doctorId, int year, int month, int dayOfMonth) {
         LocalDate day = LocalDate.of(year, month, dayOfMonth);
         return getFreeSlots(doctorId, day);
     }
+    public List<Appointment> getFreeSlots(LocalDate day) {
+
+        List<Appointment> appointments = getAll(day);
+        List<Appointment> freeSlots = new ArrayList<>();
+
+        LocalTime previousEndTime = Doctor.getStartTime();
+        LocalTime nextStartTime;
+
+        Appointment appointment;
+
+        int doctorId = -1;
+
+        if (appointments != null) {
+            Iterator<Appointment> iterator = appointments.iterator();
+
+            while (iterator.hasNext()) {
+                Appointment next = iterator.next();
+
+                if (next.getDoctorId() != doctorId) {
+                    if (doctorId != -1) {
+                        nextStartTime = Doctor.getEndTime();
+
+                        appointment = createFreeSlotAppointment(doctorId, previousEndTime, nextStartTime, day);
+                        if (appointment != null) {
+                            freeSlots.add(appointment);
+                        }
+                    }
+
+                    doctorId = next.getDoctorId();
+                    previousEndTime = Doctor.getStartTime();
+                }
+
+                nextStartTime = next.getStartDate().toLocalTime();
+
+                appointment = createFreeSlotAppointment(doctorId, previousEndTime, nextStartTime, day);
+
+                if (appointment != null) {
+                    freeSlots.add(appointment);
+                }
+
+                previousEndTime = next.getEndDate().toLocalTime();
+            }
+
+            nextStartTime = Doctor.getEndTime();
+
+            appointment = createFreeSlotAppointment(doctorId, previousEndTime, nextStartTime, day);
+            if (appointment != null) {
+                freeSlots.add(appointment);
+            }
+        }
+
+        return freeSlots;
+    }
+
+    public List<Appointment> getFirstFreeSlot(int doctorId, LocalDate day) {
+        return null;
+    }
+
     private Appointment createFreeSlotAppointment(int doctorId, LocalTime startTime, LocalTime endTime, LocalDate day) {
         if (startTime.isBefore(endTime)) {
             LocalDateTime start = startTime.atDate(day);
@@ -295,9 +343,7 @@ public class AppointmentRepository extends Repository<Appointment> {
         return null;
     }
 
-    public List<Appointment> getFreeSlots(int howMany, LocalDateTime startDateTime) {
-        return null;
-    }
+
     //update
     @Override
     public void update(Appointment o) {

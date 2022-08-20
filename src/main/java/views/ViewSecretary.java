@@ -6,6 +6,7 @@ import exceptions.TooManyResultsException;
 import exceptions.UserDoesNotExistException;
 import helpers.Utils;
 import models.appointments.Appointment;
+import models.users.Doctor;
 import models.users.Secretary;
 import models.users.User;
 import repositories.RepositoryLoad;
@@ -13,6 +14,7 @@ import repositories.RepositoryLoad;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
@@ -63,8 +65,8 @@ public class ViewSecretary implements View {
                 case 7 -> showAllDoctors();
                 case 8 -> showAllPatients();
                 case 9 -> showAllAppointments();
-                case 20 -> showFreeSlots(scanner);
-                case 21 -> soonestAppointment(scanner);
+                case 20 -> showFreeSlotsByDoctorId(scanner);
+                case 21 -> showAllFreeSlotsByDay(scanner);//soonestAppointment(scanner);
                 case 22 -> longestAppointment(scanner);
                 case 23 -> freeDoctorsOnTimeInterval(scanner);
             }
@@ -177,7 +179,7 @@ public class ViewSecretary implements View {
         }
     }
 
-    private void showFreeSlots(Scanner scanner) {
+    private void showFreeSlotsByDoctorId(Scanner scanner) {
         String[] doctorName = enquireDoctorName(scanner);
         try {
             int doctorId = RepositoryLoad.userRepository.get(getNewUser(USER_DOCTOR, doctorName[0], doctorName[1]));
@@ -196,6 +198,42 @@ public class ViewSecretary implements View {
             }
         } catch (UserDoesNotExistException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void showAllFreeSlotsByDay(Scanner scanner) {
+        int[] date = enquireDate(scanner);
+        LocalDate day = LocalDate.of(date[0], date[1], date[2]);
+        List<Appointment> freeSlots = RepositoryLoad.appointmentRepository.getFreeSlots(day);
+        if (!freeSlots.isEmpty()) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEEE, MMM dd, yyyy");
+            for (Appointment a : freeSlots) {
+                System.out.println("\n\nDoctor: " + RepositoryLoad.userRepository.get(a.getDoctorId()).getUserName().toUpperCase());
+                System.out.println("\n" + Utils.toStringAppointmentTime(a));
+            }
+        } else {
+            System.out.println("Nu exista slot-uri libere in ziua aleasa.");
+        }
+    }
+
+    private void showAllFreeSlots(Scanner scanner) {
+        List<Doctor> doctors = RepositoryLoad.userRepository.getAll(USER_DOCTOR);
+        int[] date = enquireDate(scanner);
+        LocalDate day = LocalDate.of(date[0], date[1], date[2]);
+        List<Appointment> firstFreeSlot = new ArrayList<>();
+        for (Doctor doctor : doctors) {
+            int doctorId = doctor.getId();
+            List<Appointment> freeSlots = RepositoryLoad.appointmentRepository.getFreeSlots(doctorId, day);
+            if (!freeSlots.isEmpty()) {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEEE, MMM dd, yyyy");
+                System.out.println("\nFree slots for doctor " + doctor.getUserName().toUpperCase() + " on " +
+                        day.format(formatter) + ":");
+                for (Appointment a : freeSlots) {
+                    System.out.println("\n" + Utils.toStringAppointmentTime(a));
+                }
+            } else {
+                System.out.println("Nu exista slot-uri libere cu doctorul " + doctor.getUserName().toUpperCase() + " in ziua aleasa.");
+            }
         }
     }
 
