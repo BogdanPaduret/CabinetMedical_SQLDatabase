@@ -129,16 +129,15 @@ public class Appointment implements Comparable<Appointment> {
 
     @Override
     public boolean equals(Object o) {
-        return (o instanceof Appointment appointment) &&
-                this.appointmentId == appointment.appointmentId &&
-                this.doctorId == appointment.doctorId &&
-                this.patientId == appointment.patientId &&
-                this.startDate.equals(appointment.startDate) &&
-                this.endDate.equals(appointment.endDate);
+      Appointment appointment=(Appointment) o;
+      return  ! (this.getEndDate().compareTo(appointment.getStartDate())<0 ||this.getStartDate().compareTo(appointment.getEndDate())>0);
     }
 
     @Override
     public int compareTo(Appointment o) {
+        if(o.equals(this)){
+            return  0;
+        }
         return this.startDate.compareTo(o.startDate);
     }
 

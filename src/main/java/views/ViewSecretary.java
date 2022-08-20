@@ -9,6 +9,7 @@ import models.appointments.Appointment;
 import models.users.Doctor;
 import models.users.Secretary;
 import models.users.User;
+import repositories.Repository;
 import repositories.RepositoryLoad;
 
 import java.time.LocalDate;
@@ -66,8 +67,8 @@ public class ViewSecretary implements View {
                 case 8 -> showAllPatients();
                 case 9 -> showAllAppointments();
                 case 20 -> showFreeSlotsByDoctorId(scanner);
-                case 21 -> showAllFreeSlotsByDay(scanner);//soonestAppointment(scanner);
-                case 22 -> longestAppointment(scanner);
+                case 21 -> soonestAppointment(scanner);//showAllFreeSlotsByDay(scanner);
+                case 22 -> longestAppointment(scanner);//showAllFreeSlots(scanner);
                 case 23 -> freeDoctorsOnTimeInterval(scanner);
             }
         }
@@ -210,6 +211,7 @@ public class ViewSecretary implements View {
             for (Appointment a : freeSlots) {
                 System.out.println("\n\nDoctor: " + RepositoryLoad.userRepository.get(a.getDoctorId()).getUserName().toUpperCase());
                 System.out.println("\n" + Utils.toStringAppointmentTime(a));
+                System.out.println(Utils.toStringAppointmentDuration(a));
             }
         } else {
             System.out.println("Nu exista slot-uri libere in ziua aleasa.");
@@ -225,20 +227,39 @@ public class ViewSecretary implements View {
             int doctorId = doctor.getId();
             List<Appointment> freeSlots = RepositoryLoad.appointmentRepository.getFreeSlots(doctorId, day);
             if (!freeSlots.isEmpty()) {
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEEE, MMM dd, yyyy");
-                System.out.println("\nFree slots for doctor " + doctor.getUserName().toUpperCase() + " on " +
-                        day.format(formatter) + ":");
-                for (Appointment a : freeSlots) {
-                    System.out.println("\n" + Utils.toStringAppointmentTime(a));
-                }
-            } else {
-                System.out.println("Nu exista slot-uri libere cu doctorul " + doctor.getUserName().toUpperCase() + " in ziua aleasa.");
+                firstFreeSlot.add(freeSlots.get(0));
             }
         }
+        for (Appointment a : firstFreeSlot) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEEE, MMM dd, yyyy");
+            System.out.println("\nDoctor " + RepositoryLoad.userRepository.get(a.getDoctorId()).getUserName().toUpperCase() + " on " +
+                    day.format(formatter) + ":");
+            System.out.println("\n" + Utils.toStringAppointmentTime(a));
+            System.out.println(Utils.toStringAppointmentDuration(a));
+        }
+
     }
 
     private void soonestAppointment(Scanner scanner) {
+        int[] date = enquireDate(scanner);
+        if (date.length >= 3) {
+            LocalDate day = LocalDate.of(date[0], date[1], date[2]);
 
+            Appointment appointment = RepositoryLoad.appointmentRepository.getFirstSlot(day);
+            if (appointment != null) {
+                String string = "";
+                string += "Cea mai rapida programare poate fi facuta cu doctorul ";
+                string += RepositoryLoad.userRepository.get(appointment.getDoctorId()).getUserName().toUpperCase();
+                string += " in intervalul ";
+                string += Utils.toStringAppointmentTime(appointment);
+                string += "\n" + Utils.toStringAppointmentDuration(appointment);
+                System.out.println(string);
+            } else {
+                System.out.println("Nu exista nici un spatiu liber in ziua selectata");
+            }
+        } else {
+            System.out.println("Date introduse incorect");
+        }
     }
 
     private void longestAppointment(Scanner scanner) {

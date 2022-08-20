@@ -21,7 +21,7 @@ public class Main {
         ViewLogIn viewLogIn = new ViewLogIn(databaseName);
         RepositoryLoad.appointmentRepository.clear();
         RepositoryLoad.userRepository.clear();
-        Utils.fillRepository(Utils.generateRandomUniqueUsers(200, false), RepositoryLoad.userRepository);
+        Utils.fillRepository(Utils.generateRandomUniqueUsers(10, false), RepositoryLoad.userRepository);
         viewLogIn.play();
     }
 

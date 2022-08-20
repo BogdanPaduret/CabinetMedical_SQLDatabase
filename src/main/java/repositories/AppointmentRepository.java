@@ -6,6 +6,7 @@ import models.appointments.Appointment;
 import models.appointments.Holiday;
 import models.users.Doctor;
 
+import javax.print.Doc;
 import java.lang.reflect.Method;
 import java.security.InvalidParameterException;
 import java.sql.ResultSet;
@@ -82,8 +83,8 @@ public class AppointmentRepository extends Repository<Appointment> {
 
         if (start.compareTo(startTime) >= 0 && end.compareTo(endTime) <= 0) {
             String string = Utils.querySelect(APPOINTMENTS_TABLE_NAME);
-            string += String.format("\nWHERE ('%s' > startDateTime AND '%s' < endDateTime) AND " +
-                            "('%s' > startDateTime AND '%s' < endDateTime) AND " +
+            string += String.format("\nWHERE (('%s' >= startDateTime AND '%s' < endDateTime) OR " +
+                            "('%s' > startDateTime AND '%s' <= endDateTime)) AND " +
                             "doctorId = %d",
                     appointment.getStartDate(), appointment.getStartDate(), appointment.getEndDate(), appointment.getEndDate(), doctor.getId());
             executeStatement(string);
@@ -276,6 +277,9 @@ public class AppointmentRepository extends Repository<Appointment> {
         LocalDate day = LocalDate.of(year, month, dayOfMonth);
         return getFreeSlots(doctorId, day);
     }
+
+
+
     public List<Appointment> getFreeSlots(LocalDate day) {
 
         List<Appointment> appointments = getAll(day);
@@ -328,6 +332,40 @@ public class AppointmentRepository extends Repository<Appointment> {
         }
 
         return freeSlots;
+    }
+
+    public Map<Doctor, List<Appointment>> getFreeSlotsMap(LocalDate day) {
+        Map<Doctor, List<Appointment>> freeSlots = new TreeMap<>();
+
+        //todo:lista cu toti doctori
+        List<Doctor> doctors = RepositoryLoad.userRepository.getAll(USER_DOCTOR);
+        for(Doctor d :doctors){
+            freeSlots.put(d,getFreeSlots(d.getId(),day));
+        }
+
+        return freeSlots;
+    }
+
+    public Appointment getFirstSlot(LocalDate day) {
+        Map<Doctor, List<Appointment>> freeSlots = getFreeSlotsMap(day);
+        try {
+            Appointment first = null;
+
+            for (Doctor doctor : freeSlots.keySet()) {
+                List<Appointment> appointments = freeSlots.get(doctor);
+                if (appointments != null && appointments.size() > 0) {
+                    Appointment appointment = freeSlots.get(doctor).get(0);
+                    if (first == null || appointment.getStartDate().isBefore(first.getStartDate())) {
+                        first = appointment;
+                    }
+                }
+            }
+            return first;
+
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     public List<Appointment> getFirstFreeSlot(int doctorId, LocalDate day) {

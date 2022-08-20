@@ -109,7 +109,6 @@ public class Utils {
         string += appointment.getStartDate().format(formatter);
         string += " - ";
         string += appointment.getEndDate().format(formatter);
-        string += "\n" + toStringAppointmentDuration(appointment);
 
         return string;
     }

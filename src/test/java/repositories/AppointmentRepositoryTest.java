@@ -1,13 +1,17 @@
 package repositories;
 
 import models.appointments.Appointment;
+import models.users.Doctor;
 import models.users.User;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import javax.print.Doc;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import static helpers.Constants.*;
 import static helpers.Utils.getNewAppointment;
@@ -112,4 +116,11 @@ class AppointmentRepositoryTest {
     void deleteTest() {
     }
 
+
+    @Test
+    void mapTest() {
+        Map<Doctor, List<Appointment>> freeSlots = new TreeMap<>();
+//        Doctor doctor = new Doctor();
+//        List<Appointment> appointments=freeSlots.get()
+    }
 }
