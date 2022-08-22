@@ -6,7 +6,6 @@ import models.appointments.Appointment;
 import models.appointments.Holiday;
 import models.users.Doctor;
 
-import javax.print.Doc;
 import java.lang.reflect.Method;
 import java.security.InvalidParameterException;
 import java.sql.ResultSet;
@@ -68,7 +67,7 @@ public class AppointmentRepository extends Repository<Appointment> {
 
     //read
     public boolean dateTimeFree(Appointment appointment, Doctor doctor) {
-        boolean isDateFree = isDateFree(appointment.getStartDate());
+        boolean isDateFree = isDateFree(appointment.getStartDate().toLocalDate());
         boolean isTimeFree = isTimeFree(appointment, doctor);
 
         return isDateFree && isTimeFree;
@@ -76,7 +75,7 @@ public class AppointmentRepository extends Repository<Appointment> {
 
     private boolean isTimeFree(Appointment appointment, Doctor doctor) {
 
-        List<Appointment> appointments = this.getAll(appointment.getDoctorId(), appointment.getStartDate().toLocalDate());
+        List<Appointment> appointments = this.getAll(doctor.getId(), appointment.getStartDate().toLocalDate());
 
         if (appointments!=null && !appointments.isEmpty()) {
             for (Appointment a : appointments) {
@@ -88,7 +87,7 @@ public class AppointmentRepository extends Repository<Appointment> {
         return true;
 
     }
-    private boolean isDateFree(LocalDateTime startDate) {
+    private boolean isDateFree(LocalDate startDate) {
         for (DayOfWeek day : Doctor.getWorkDays()) {
             if (startDate.getDayOfWeek().equals(day)) {
                 return true;
@@ -232,81 +231,22 @@ public class AppointmentRepository extends Repository<Appointment> {
 
         Appointment appointment;
 
-        if (appointments != null) {
-            Iterator<Appointment> iterator = appointments.iterator();
-            while (iterator.hasNext()) {
-                Appointment next = iterator.next();
+        if (isDateFree(day)) {
+            if (appointments != null) {
+                Iterator<Appointment> iterator = appointments.iterator();
+                while (iterator.hasNext()) {
+                    Appointment next = iterator.next();
 
-                nextStartTime = next.getStartDate().toLocalTime();
+                    nextStartTime = next.getStartDate().toLocalTime();
 
-                appointment = createFreeSlotAppointment(doctorId, previousEndTime, nextStartTime, day);
-                if (appointment != null) {
-                    freeSlots.add(appointment);
-                }
-
-                previousEndTime = next.getEndDate().toLocalTime();
-            }
-        }
-        nextStartTime = Doctor.getEndTime();
-
-        appointment = createFreeSlotAppointment(doctorId, previousEndTime, nextStartTime, day);
-        if (appointment != null) {
-            freeSlots.add(appointment);
-        }
-
-        return freeSlots;
-    }
-
-    public List<Appointment> getFreeSlots(int doctorId, int year, int month, int dayOfMonth) {
-        LocalDate day = LocalDate.of(year, month, dayOfMonth);
-        return getFreeSlots(doctorId, day);
-    }
-
-
-
-    public List<Appointment> getFreeSlots(LocalDate day) {
-
-        List<Appointment> appointments = getAll(day);
-        List<Appointment> freeSlots = new ArrayList<>();
-
-        LocalTime previousEndTime = Doctor.getStartTime();
-        LocalTime nextStartTime;
-
-        Appointment appointment;
-
-        int doctorId = -1;
-
-        if (appointments != null) {
-            Iterator<Appointment> iterator = appointments.iterator();
-
-            while (iterator.hasNext()) {
-                Appointment next = iterator.next();
-
-                if (next.getDoctorId() != doctorId) {
-                    if (doctorId != -1) {
-                        nextStartTime = Doctor.getEndTime();
-
-                        appointment = createFreeSlotAppointment(doctorId, previousEndTime, nextStartTime, day);
-                        if (appointment != null) {
-                            freeSlots.add(appointment);
-                        }
+                    appointment = createFreeSlotAppointment(doctorId, previousEndTime, nextStartTime, day);
+                    if (appointment != null) {
+                        freeSlots.add(appointment);
                     }
 
-                    doctorId = next.getDoctorId();
-                    previousEndTime = Doctor.getStartTime();
+                    previousEndTime = next.getEndDate().toLocalTime();
                 }
-
-                nextStartTime = next.getStartDate().toLocalTime();
-
-                appointment = createFreeSlotAppointment(doctorId, previousEndTime, nextStartTime, day);
-
-                if (appointment != null) {
-                    freeSlots.add(appointment);
-                }
-
-                previousEndTime = next.getEndDate().toLocalTime();
             }
-
             nextStartTime = Doctor.getEndTime();
 
             appointment = createFreeSlotAppointment(doctorId, previousEndTime, nextStartTime, day);
@@ -317,28 +257,28 @@ public class AppointmentRepository extends Repository<Appointment> {
 
         return freeSlots;
     }
-
-    public Map<Doctor, List<Appointment>> getFreeSlotsMap(LocalDate day) {
+    public Map<Doctor, List<Appointment>> getFreeSlots(LocalDate day) {
         Map<Doctor, List<Appointment>> freeSlots = new TreeMap<>();
 
         //todo:lista cu toti doctori
         List<Doctor> doctors = RepositoryLoad.userRepository.getAll(USER_DOCTOR);
+
         for(Doctor d :doctors){
-            freeSlots.put(d,getFreeSlots(d.getId(),day));
+            freeSlots.put(d, getFreeSlots(d.getId(), day));
         }
 
         return freeSlots;
     }
 
-    public Appointment getFirstSlot(LocalDate day) {
-        Map<Doctor, List<Appointment>> freeSlots = getFreeSlotsMap(day);
+    public Appointment getFirstFreeSlot(LocalDate day) {
+        Map<Doctor, List<Appointment>> freeSlots = getFreeSlots(day);
         try {
             Appointment first = null;
 
             for (Doctor doctor : freeSlots.keySet()) {
                 List<Appointment> appointments = freeSlots.get(doctor);
                 if (appointments != null && appointments.size() > 0) {
-                    Appointment appointment = freeSlots.get(doctor).get(0);
+                    Appointment appointment = appointments.get(0);
                     if (first == null || appointment.getStartDate().isBefore(first.getStartDate())) {
                         first = appointment;
                     }
@@ -351,9 +291,62 @@ public class AppointmentRepository extends Repository<Appointment> {
             return null;
         }
     }
+    public Appointment getLongestFreeSlot(LocalDate day) {
+        Map<Doctor, List<Appointment>> freeSlots = getFreeSlots(day);
+        try {
+            Appointment longest = null;
 
-    public List<Appointment> getFirstFreeSlot(int doctorId, LocalDate day) {
-        return null;
+            for (Doctor doctor : freeSlots.keySet()) {
+                Appointment appointment = getLongestFreeSlot(doctor.getId(), day);
+                if (longest == null || appointment.getDuration().compareTo(longest.getDuration()) > 0) {
+                    longest = appointment;
+                }
+            }
+
+            return longest;
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+    }
+
+    public Appointment getFirstFreeSlot(int doctorId, LocalDate day) {
+        List<Appointment> appointments = getFreeSlots(doctorId, day);
+        Appointment first = null;
+        if (appointments != null && appointments.size() > 0) {
+            for (Appointment appointment : appointments) {
+                if (first == null || appointment.getStartDate().isBefore(first.getStartDate())) {
+                    first = appointment;
+                }
+            }
+        }
+        return first;
+    }
+    public Appointment getLongestFreeSlot(int doctorId, LocalDate day) {
+        List<Appointment> appointments = getFreeSlots(doctorId, day);
+        Appointment longest = null;
+        if (appointments != null && appointments.size() > 0) {
+            for (Appointment appointment : appointments) {
+                if (longest == null || appointment.getDuration().compareTo(longest.getDuration()) > 0) {
+                    longest = appointment;
+                }
+            }
+        }
+        return longest;
+    }
+
+    public List<Doctor> getFreeDoctors(Appointment appointment) {
+        List<Doctor> doctors = RepositoryLoad.userRepository.getAll(USER_DOCTOR);
+        List<Doctor> freeDoctors = new ArrayList<>();
+
+        for (Doctor doctor : doctors) {
+            if (dateTimeFree(appointment, doctor)) {
+                freeDoctors.add(doctor);
+            }
+        }
+
+        return freeDoctors;
     }
 
     private Appointment createFreeSlotAppointment(int doctorId, LocalTime startTime, LocalTime endTime, LocalDate day) {

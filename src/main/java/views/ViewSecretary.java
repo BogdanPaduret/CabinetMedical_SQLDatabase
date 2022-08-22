@@ -9,13 +9,11 @@ import models.appointments.Appointment;
 import models.users.Doctor;
 import models.users.Secretary;
 import models.users.User;
-import repositories.Repository;
 import repositories.RepositoryLoad;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
@@ -68,7 +66,7 @@ public class ViewSecretary implements View {
                 case 9 -> showAllAppointments();
                 case 20 -> showFreeSlotsByDoctorId(scanner);
                 case 21 -> soonestAppointment(scanner);//showAllFreeSlotsByDay(scanner);
-                case 22 -> longestAppointment(scanner);//showAllFreeSlots(scanner);
+                case 22 -> longestAppointmentAtDoctor(scanner);//showAllFreeSlots(scanner);
                 case 23 -> freeDoctorsOnTimeInterval(scanner);
             }
         }
@@ -93,6 +91,7 @@ public class ViewSecretary implements View {
         string += "\nApasati 8 pentru a vedea toti pacientii";
         string += "\nApasati 9 pentru a vedea toate programarile";
 
+        string += "\nApasati 20 pentru a vedea toate spatiile libere ale unui anumit doctor intr-o anumita zi";
         string += "\nApasati 21 pentru a vedea care este cea mai rapida programare intr-o anumita zi";
         string += "\nApasati 22 pentru a vedea care poate fi programarea cea mai lunga cu un anumit doctor";
         string += "\nApasati 23 pentru a vedea ce doctori sunt disponibili intr-o anumita perioada";
@@ -202,50 +201,12 @@ public class ViewSecretary implements View {
         }
     }
 
-    private void showAllFreeSlotsByDay(Scanner scanner) {
-        int[] date = enquireDate(scanner);
-        LocalDate day = LocalDate.of(date[0], date[1], date[2]);
-        List<Appointment> freeSlots = RepositoryLoad.appointmentRepository.getFreeSlots(day);
-        if (!freeSlots.isEmpty()) {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEEE, MMM dd, yyyy");
-            for (Appointment a : freeSlots) {
-                System.out.println("\n\nDoctor: " + RepositoryLoad.userRepository.get(a.getDoctorId()).getUserName().toUpperCase());
-                System.out.println("\n" + Utils.toStringAppointmentTime(a));
-                System.out.println(Utils.toStringAppointmentDuration(a));
-            }
-        } else {
-            System.out.println("Nu exista slot-uri libere in ziua aleasa.");
-        }
-    }
-
-    private void showAllFreeSlots(Scanner scanner) {
-        List<Doctor> doctors = RepositoryLoad.userRepository.getAll(USER_DOCTOR);
-        int[] date = enquireDate(scanner);
-        LocalDate day = LocalDate.of(date[0], date[1], date[2]);
-        List<Appointment> firstFreeSlot = new ArrayList<>();
-        for (Doctor doctor : doctors) {
-            int doctorId = doctor.getId();
-            List<Appointment> freeSlots = RepositoryLoad.appointmentRepository.getFreeSlots(doctorId, day);
-            if (!freeSlots.isEmpty()) {
-                firstFreeSlot.add(freeSlots.get(0));
-            }
-        }
-        for (Appointment a : firstFreeSlot) {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEEE, MMM dd, yyyy");
-            System.out.println("\nDoctor " + RepositoryLoad.userRepository.get(a.getDoctorId()).getUserName().toUpperCase() + " on " +
-                    day.format(formatter) + ":");
-            System.out.println("\n" + Utils.toStringAppointmentTime(a));
-            System.out.println(Utils.toStringAppointmentDuration(a));
-        }
-
-    }
-
     private void soonestAppointment(Scanner scanner) {
         int[] date = enquireDate(scanner);
         if (date.length >= 3) {
             LocalDate day = LocalDate.of(date[0], date[1], date[2]);
 
-            Appointment appointment = RepositoryLoad.appointmentRepository.getFirstSlot(day);
+            Appointment appointment = RepositoryLoad.appointmentRepository.getFirstFreeSlot(day);
             if (appointment != null) {
                 String string = "";
                 string += "Cea mai rapida programare poate fi facuta cu doctorul ";
@@ -262,12 +223,53 @@ public class ViewSecretary implements View {
         }
     }
 
-    private void longestAppointment(Scanner scanner) {
+    private void longestAppointmentAtDoctor(Scanner scanner) {
+        String[] doctorName = enquireDoctorName(scanner);
+        try {
+            int doctorId = RepositoryLoad.userRepository.get(Utils.getNewUser(USER_DOCTOR, doctorName[0], doctorName[1]));
+            int[] date = enquireDate(scanner);
+            LocalDate day = LocalDate.of(date[0], date[1], date[2]);
 
+            Appointment appointment = RepositoryLoad.appointmentRepository.getLongestFreeSlot(doctorId, day);
+
+            Doctor doctor = (Doctor) RepositoryLoad.userRepository.get(doctorId);
+
+            if (appointment != null) {
+                String string = "";
+
+                string += "Cea mai lunga programare ce poate fi facuta cu doctorul " + doctor.getUserName().toUpperCase();
+                string += " este in intervalul orar " + Utils.toStringAppointmentTime(appointment);
+                string += " (" + Utils.toStringAppointmentDuration(appointment) + ")";
+
+                System.out.println(string);
+            } else {
+                System.out.println("Nu exista nici un spatiu liber in ziua selectata cu doctorul selectat");
+            }
+
+        } catch (UserDoesNotExistException e ) {
+            e.printStackTrace();
+        }
     }
 
     private void freeDoctorsOnTimeInterval(Scanner scanner) {
+        int[] date = enquireDate(scanner);
+        int[] time = enquireTime(scanner);
+        LocalDateTime startDate = LocalDateTime.of(date[0], date[1], date[2], time[0], time[1]);
+        int duration = enquireDuration(scanner);
+        LocalDateTime endDate = startDate.plusMinutes(duration);
 
+        Appointment appointment = getNewAppointment(-1, -1, startDate, endDate);
+
+        List<Doctor> doctors = RepositoryLoad.appointmentRepository.getFreeDoctors(appointment);
+
+        if (doctors != null && !doctors.isEmpty()) {
+            String string = "";
+            string += "Doctori liber pentru: " + Utils.toStringAppointmentDate(appointment) + " " + Utils.toStringAppointmentTime(appointment);
+            for (Doctor doctor : doctors) {
+                string += "\n" + doctor.getUserName().toUpperCase();
+            }
+            System.out.println(string);
+        }
     }
 
 

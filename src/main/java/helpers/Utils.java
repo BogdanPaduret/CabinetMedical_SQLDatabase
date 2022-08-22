@@ -113,6 +113,16 @@ public class Utils {
         return string;
     }
 
+    public static String toStringAppointmentDate(Appointment appointment) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEEE, MMM dd, yyyy");
+
+        String string = "";
+
+        string += appointment.getStartDate().format(formatter);
+
+        return string;
+    }
+
     public static String toStringAppointmentDuration(Appointment appointment) {
         Duration duration = appointment.getDuration();
         int days = (int) duration.toDays();
