@@ -136,7 +136,10 @@ public class ViewLogIn implements View {
             System.out.println(abort);
         } else {
             String[] fullName = input[1].trim().split(NAME_SEPARATOR);
-            RepositoryLoad.userRepository.insert(Utils.getNewUser(type, fullName[0], fullName[1]));
+            User user = Utils.getNewUser(type, fullName[0], fullName[1]);
+            RepositoryLoad.userRepository.insert(user);
+            System.out.println("Utilizatorul " + user.getUserName().toUpperCase() + " de tip " + type.toUpperCase() +
+                    " a fost creat cu succes cu ID-ul " + RepositoryLoad.userRepository.get(user));
         }
 
     }

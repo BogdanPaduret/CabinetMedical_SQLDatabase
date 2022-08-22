@@ -75,34 +75,18 @@ public class AppointmentRepository extends Repository<Appointment> {
     }
 
     private boolean isTimeFree(Appointment appointment, Doctor doctor) {
-        LocalTime startTime = Doctor.getStartTime();
-        LocalTime endTime = Doctor.getEndTime();
 
-        LocalTime start = appointment.getStartDate().toLocalTime();
-        LocalTime end = appointment.getEndDate().toLocalTime();
+        List<Appointment> appointments = this.getAll(appointment.getDoctorId(), appointment.getStartDate().toLocalDate());
 
-        if (start.compareTo(startTime) >= 0 && end.compareTo(endTime) <= 0) {
-            String string = Utils.querySelect(APPOINTMENTS_TABLE_NAME);
-            string += String.format("\nWHERE (('%s' >= startDateTime AND '%s' < endDateTime) OR " +
-                            "('%s' > startDateTime AND '%s' <= endDateTime)) AND " +
-                            "doctorId = %d",
-                    appointment.getStartDate(), appointment.getStartDate(), appointment.getEndDate(), appointment.getEndDate(), doctor.getId());
-            executeStatement(string);
-
-            try {
-                ResultSet set = getStatement().getResultSet();
-                if (set.next()) {
+        if (appointments!=null && !appointments.isEmpty()) {
+            for (Appointment a : appointments) {
+                if (a.compareTo(appointment) == 0) {
                     return false;
                 }
-            } catch (SQLException e) {
-                e.printStackTrace();
             }
-
-        } else {
-            return false;
         }
-
         return true;
+
     }
     private boolean isDateFree(LocalDateTime startDate) {
         for (DayOfWeek day : Doctor.getWorkDays()) {
