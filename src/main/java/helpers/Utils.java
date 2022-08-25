@@ -365,4 +365,85 @@ public class Utils {
     }
 
 
+    //enquiry methods
+    public static String[] enquireDoctorName(Scanner scanner) {
+        String[] doctorName = new String[0];
+        while (doctorName.length < 2) {
+            System.out.println("Introduceti prenumele si numele DOCTORULUI separate prin '" + NAME_SEPARATOR + "'");
+            doctorName = scanner.nextLine().split(NAME_SEPARATOR);
+        }
+        return doctorName;
+    }
+    public static Doctor enquireDoctor(Scanner scanner) throws UserDoesNotExistException {
+        String[] doctorName = enquireDoctorName(scanner);
+
+        int doctorId = RepositoryLoad.userRepository.get(getNewUser(USER_DOCTOR, doctorName[0], doctorName[1]));
+        return (Doctor) RepositoryLoad.userRepository.get(doctorId);
+    }
+
+    public static String[] enquirePatientName(Scanner scanner) {
+        String[] patientName = new String[0];
+        while (patientName.length < 2) {
+            System.out.println("Introduceti prenumele si numele PACIENTULUI separate prin '" + NAME_SEPARATOR + "'");
+            patientName = scanner.nextLine().split(NAME_SEPARATOR);
+        }
+        return patientName;
+    }
+    public static Patient enquirePatient(Scanner scanner) {
+        String[] patientName = enquirePatientName(scanner);
+
+        int patientId = RepositoryLoad.userRepository.get(getNewUser(USER_PATIENT, patientName[0], patientName[1]));
+        return (Patient) RepositoryLoad.userRepository.get(patientId);
+    }
+
+    public static int[] enquireDate(Scanner scanner) {
+        int[] date = new int[0];
+        while (date.length < 3 || multiplyIntArray(date) == 0) {
+            System.out.println("Introduceti anul, luna si ziua separate prin '" + STRING_SEPARATOR + "'");
+            date = intFromScanner(scanner, STRING_SEPARATOR);
+        }
+        return date;
+    }
+    public static int[] enquireTime(Scanner scanner) {
+        int[] time = new int[0];
+        while (time.length < 2) {
+            System.out.println("Introduceti ora si minutul programarii separate prin '" + TIME_SEPARATOR + "'");
+            time = intFromScanner(scanner, TIME_SEPARATOR);
+        }
+        return time;
+    }
+    public static int enquireDuration(Scanner scanner) {
+        int duration = 0;
+        while (duration <= 0) {
+            System.out.println("Introduceti durata programarii in minute intregi");
+            duration = Utils.parseInteger(scanner.nextLine(), 0);
+        }
+        return duration;
+    }
+
+    //helpers
+    private static int[] intFromScanner(Scanner scanner, String separator) {
+        return intFromScanner(scanner, separator, 0);
+    }
+    private static int[] intFromScanner(Scanner scanner, String separator, int valOnException) {
+        String[] input = scanner.nextLine().split(separator);
+        int[] inputArray = new int[input.length];
+        for (int i = 0; i < input.length; i++) {
+            inputArray[i] = Utils.parseInteger(input[i], valOnException);
+        }
+        return inputArray;
+    }
+    private static int multiplyIntArray(int[] array) {
+        int r;
+        if (array.length > 0) {
+            r = 1;
+            for (int i = 0; i < array.length; i++) {
+                r = r * array[i];
+            }
+        } else {
+            r = 0;
+        }
+        return r;
+    }
+
 }

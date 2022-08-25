@@ -58,6 +58,7 @@ public class AppointmentRepository extends Repository<Appointment> {
                 }
             } catch (AppointmentFailedException e) {
                 e.printStackTrace();
+                throw new AppointmentFailedException("FAILED!");
             }
         }
 

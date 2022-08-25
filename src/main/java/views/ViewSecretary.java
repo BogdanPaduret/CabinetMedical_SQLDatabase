@@ -4,9 +4,11 @@ import exceptions.AppointmentDoesNotExistException;
 import exceptions.AppointmentFailedException;
 import exceptions.TooManyResultsException;
 import exceptions.UserDoesNotExistException;
+import helpers.Constants;
 import helpers.Utils;
 import models.appointments.Appointment;
 import models.users.Doctor;
+import models.users.Patient;
 import models.users.Secretary;
 import models.users.User;
 import repositories.RepositoryLoad;
@@ -106,7 +108,8 @@ public class ViewSecretary implements View {
             Appointment appointment = enquireAppointmentDetails(scanner);
             RepositoryLoad.appointmentRepository.insert(appointment);
             System.out.println("Programare efectuata cu succes cu ID-ul " + RepositoryLoad.appointmentRepository.get(appointment));
-
+        } catch (UserDoesNotExistException e) {
+            System.out.println(e.getMessage());
         } catch (AppointmentFailedException e) {
             System.out.println("Programarea nu poate fi facuta cu acest medic in acest interval orar." +
                     "\nAlegeti un alt doctor sau un alt interval orar."
@@ -278,15 +281,44 @@ public class ViewSecretary implements View {
         return enquireAppointmentDetails(scanner, -1);
     }
     private Appointment enquireAppointmentDetails(Scanner scanner, int appointmentId) {
-        String[] patientName = enquirePatientName(scanner);
-        String[] doctorName = enquireDoctorName(scanner);
+        String[] patientName;
+        String[] doctorName;
 
-        int[] date = enquireDate(scanner);
-        int[] time = enquireTime(scanner);
-        int duration = enquireDuration(scanner);
+        int patientId;
+        int doctorId;
 
-        int doctorId = RepositoryLoad.userRepository.get(getNewUser(USER_DOCTOR, doctorName[0], doctorName[1]));
-        int patientId = RepositoryLoad.userRepository.get(getNewUser(USER_PATIENT, patientName[0], patientName[1]));
+        int[] date;
+        int[] time;
+        int duration;
+
+//        patientName = enquirePatientName(scanner);
+//        patientId = RepositoryLoad.userRepository.get(getNewUser(USER_PATIENT, patientName[0], patientName[1]));
+
+//        doctorName = enquireDoctorName(scanner);
+//        doctorId = RepositoryLoad.userRepository.get(getNewUser(USER_DOCTOR, doctorName[0], doctorName[1]));
+
+        Patient patient;
+        Doctor doctor;
+
+        try {
+            patient = Utils.enquirePatient(scanner);
+        } catch (UserDoesNotExistException e) {
+            throw new UserDoesNotExistException("Patient does not exist.");
+        }
+
+        try {
+            doctor = Utils.enquireDoctor(scanner);
+        } catch (UserDoesNotExistException e) {
+            throw new UserDoesNotExistException("Doctor does not exist.");
+        }
+
+        patientId = patient.getId();
+        doctorId = doctor.getId();
+
+        date = enquireDate(scanner);
+        time = enquireTime(scanner);
+        duration = enquireDuration(scanner);
+
         LocalDateTime startDate = LocalDateTime.of(date[0], date[1], date[2], time[0], time[1]);
         LocalDateTime endDate = startDate.plusMinutes(duration);
 
@@ -295,71 +327,7 @@ public class ViewSecretary implements View {
         }
 
         return getNewAppointment(doctorId, patientId, startDate, endDate);
-    }
-    private String[] enquireDoctorName(Scanner scanner) {
-        String[] doctorName = new String[0];
-        while (doctorName.length < 2) {
-            System.out.println("Introduceti prenumele si numele DOCTORULUI separate prin '" + NAME_SEPARATOR + "'");
-            doctorName = scanner.nextLine().split(NAME_SEPARATOR);
-        }
-        return doctorName;
-    }
-    private String[] enquirePatientName(Scanner scanner) {
-        String[] patientName = new String[0];
-        while (patientName.length < 2) {
-            System.out.println("Introduceti prenumele si numele PACIENTULUI separate prin '" + NAME_SEPARATOR + "'");
-            patientName = scanner.nextLine().split(NAME_SEPARATOR);
-        }
-        return patientName;
-    }
-    private int[] enquireDate(Scanner scanner) {
-        int[] date = new int[0];
-        while (date.length < 3 && multiplyIntArray(date) == 0) {
-            System.out.println("Introduceti anul, luna si ziua separate prin '" + STRING_SEPARATOR + "'");
-            date = intFromScanner(scanner, STRING_SEPARATOR);
-        }
-        return date;
-    }
-    private int[] enquireTime(Scanner scanner) {
-        int[] time = new int[0];
-        while (time.length < 2) {
-            System.out.println("Introduceti ora si minutul programarii separate prin '" + TIME_SEPARATOR + "'");
-            time = intFromScanner(scanner, TIME_SEPARATOR);
-        }
-        return time;
-    }
-    private int enquireDuration(Scanner scanner) {
-        int duration = 0;
-        while (duration <= 0) {
-            System.out.println("Introduceti durata programarii in minute intregi");
-            duration = Utils.parseInteger(scanner.nextLine(), 0);
-        }
-        return duration;
-    }
 
-    private int[] intFromScanner(Scanner scanner, String separator) {
-        return intFromScanner(scanner, separator, 0);
-    }
-    private int[] intFromScanner(Scanner scanner, String separator, int valOnException) {
-        String[] input = scanner.nextLine().split(separator);
-        int[] inputArray = new int[input.length];
-        for (int i = 0; i < input.length; i++) {
-            inputArray[i] = Utils.parseInteger(input[i], valOnException);
-        }
-        return inputArray;
-    }
-
-    private int multiplyIntArray(int[] array) {
-        int r;
-        if (array.length > 0) {
-            r = 1;
-            for (int i = 0; i < array.length; i++) {
-                r = r * array[i];
-            }
-        } else {
-            r = 0;
-        }
-        return r;
     }
 
     private void updateAppointment(int appointmentId, Scanner scanner) {
