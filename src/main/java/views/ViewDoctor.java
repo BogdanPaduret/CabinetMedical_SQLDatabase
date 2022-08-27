@@ -9,6 +9,7 @@ import repositories.Repository;
 import repositories.RepositoryLoad;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Scanner;
 
 public class ViewDoctor implements View {
@@ -82,10 +83,20 @@ public class ViewDoctor implements View {
 
     //todo createBreak() si cancelBreak()
     private void createBreak(Scanner scanner) {
-
+        Appointment breakTime = enquireBreakDetails(scanner);
+        try {
+            RepositoryLoad.appointmentRepository.insert(breakTime);
+        } catch (AppointmentFailedException e) {
+            System.out.println("Exista deja alte programari in acest interval orar, in aceasta zi.");
+        }
     }
     private void cancelBreak(Scanner scanner) {
-
+        Appointment breakTime = enquireBreakDetails(scanner);
+        try {
+            RepositoryLoad.appointmentRepository.delete(breakTime);
+        } catch (AppointmentFailedException e) {
+            e.printStackTrace();
+        }
     }
 
     //helpers
@@ -94,5 +105,14 @@ public class ViewDoctor implements View {
         LocalDate day = LocalDate.of(date[0], date[1], date[2]);
 
         return Utils.getNewAppointment(doctor.getId(), doctor.getId(), day.atTime(9, 0), day.atTime(17, 0));
+    }
+    private Appointment enquireBreakDetails(Scanner scanner) {
+        int[] date = Utils.enquireDate(scanner);
+        int[] time = Utils.enquireTime(scanner);
+        int duration = Utils.enquireDuration(scanner);
+        LocalDateTime startTime = LocalDateTime.of(date[0], date[1], date[2], time[0], time[1]);
+        LocalDateTime endTime = startTime.plusMinutes(duration);
+
+        return Utils.getNewAppointment(doctor.getId(), doctor.getId(), startTime, endTime);
     }
 }

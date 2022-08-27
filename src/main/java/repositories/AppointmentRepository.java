@@ -78,13 +78,19 @@ public class AppointmentRepository extends Repository<Appointment> {
 
         List<Appointment> appointments = this.getAll(doctor.getId(), appointment.getStartDate().toLocalDate());
 
-        if (appointments!=null && !appointments.isEmpty()) {
+        if (appointment.getStartDate().toLocalTime().compareTo(Doctor.getStartTime()) < 0
+                || appointment.getEndDate().toLocalTime().compareTo(Doctor.getEndTime()) > 0) {
+            return false;
+        }
+
+        if (appointments != null && !appointments.isEmpty()) {
             for (Appointment a : appointments) {
                 if (a.compareTo(appointment) == 0) {
                     return false;
                 }
             }
         }
+
         return true;
 
     }
